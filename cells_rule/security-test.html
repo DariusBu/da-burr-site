@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security Test - Cells Rule</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    .pass { background: #d4edda; border-color: #c3e6cb; }
+    .fail { background: #f8d7da; border-color: #f5c6cb; }
+    pre { background: #f8f9fa; padding: 10px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Cells Rule Security Test</h1>
+  <p>This page tests the security measures implemented in the cells_rule project.</p>
+  
+  <div id="tests"></div>
+  
+  <script src="rules.js"></script>
+  <script>
+    const tests = [
+      {
+        name: "Valid Rule",
+        code: `function decide(neighborhood) { return 'up'; }`,
+        shouldPass: true
+      },
+      {
+        name: "Dangerous eval()",
+        code: `function decide(neighborhood) { eval('alert("hacked")'); return 'up'; }`,
+        shouldPass: false
+      },
+      {
+        name: "Dangerous document access",
+        code: `function decide(neighborhood) { document.body.innerHTML = 'hacked'; return 'up'; }`,
+        shouldPass: false
+      },
+      {
+        name: "Dangerous fetch()",
+        code: `function decide(neighborhood) { fetch('http://evil.com'); return 'up'; }`,
+        shouldPass: false
+      },
+      {
+        name: "Code too long",
+        code: `function decide(neighborhood) { ${'console.log("test"); '.repeat(100)} return 'up'; }`,
+        shouldPass: false
+      },
+      {
+        name: "No decide function",
+        code: `function move(neighborhood) { return 'up'; }`,
+        shouldPass: false
+      },
+      {
+        name: "Invalid return value",
+        code: `function decide(neighborhood) { return 'invalid'; }`,
+        shouldPass: false
+      }
+    ];
+    
+    function runTests() {
+      const container = document.getElementById('tests');
+      
+      tests.forEach((test, index) => {
+        const div = document.createElement('div');
+        div.className = 'test';
+        
+        try {
+          const result = setPlayerRule(`test-${index}`, test.code);
+          const passed = result === test.shouldPass;
+          
+          div.className = `test ${passed ? 'pass' : 'fail'}`;
+          div.innerHTML = `
+            <h3>${test.name} - ${passed ? 'PASS' : 'FAIL'}</h3>
+            <pre>${test.code}</pre>
+            <p>Expected: ${test.shouldPass ? 'Pass' : 'Fail'}, Got: ${result ? 'Pass' : 'Fail'}</p>
+          `;
+        } catch (error) {
+          const passed = !test.shouldPass;
+          div.className = `test ${passed ? 'pass' : 'fail'}`;
+          div.innerHTML = `
+            <h3>${test.name} - ${passed ? 'PASS' : 'FAIL'}</h3>
+            <pre>${test.code}</pre>
+            <p>Error: ${error.message}</p>
+            <p>Expected: ${test.shouldPass ? 'Pass' : 'Fail'}, Got: ${passed ? 'Pass' : 'Fail'}</p>
+          `;
+        }
+        
+        container.appendChild(div);
+      });
+    }
+    
+    // Run tests when page loads
+    window.onload = runTests;
+  </script>
+</body>
+</html> 

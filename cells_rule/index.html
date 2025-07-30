@@ -14,11 +14,45 @@
   <main>
     <div id="controls">
       <label for="editor">Your rule function (JS):</label>
+      <div id="rule-examples">
+        <p><strong>Safe Rule Examples:</strong></p>
+        <ul>
+          <li><code>Random Movement:</code> Move randomly in any direction</li>
+          <li><code>Follow Leader:</code> Move towards the most common cell type</li>
+          <li><code>Aggressive:</code> Move towards empty spaces or attack other cells</li>
+        </ul>
+        <p><strong>Available:</strong> Math, Array, Object, String, Number, Boolean, console.log</p>
+        <p><strong>Forbidden:</strong> eval, fetch, document, window, localStorage, etc.</p>
+      </div>
       <textarea id="editor">// Define how your cells behave
+// The decide function receives a 3x3 neighborhood array
+// Return: 'up', 'down', 'left', 'right', or 'stay'
 function decide(neighborhood) {
-  // Example: move randomly
-  const dirs = ['up', 'down', 'left', 'right', 'stay'];
-  return dirs[Math.floor(Math.random() * dirs.length)];
+  // Example: move randomly with some intelligence
+  const center = neighborhood[1][1]; // Current cell
+  const empty = [];
+  
+  // Find empty spaces around us
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue; // Skip center
+      const cell = neighborhood[1 + dy][1 + dx];
+      if (!cell) {
+        empty.push([dx, dy]);
+      }
+    }
+  }
+  
+  // If we have empty spaces, move to one randomly
+  if (empty.length > 0) {
+    const [dx, dy] = empty[Math.floor(Math.random() * empty.length)];
+    if (dx === -1) return 'left';
+    if (dx === 1) return 'right';
+    if (dy === -1) return 'up';
+    if (dy === 1) return 'down';
+  }
+  
+  return 'stay';
 }</textarea>
       <button id="join-btn">Join Game</button>
     </div>
