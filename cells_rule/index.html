@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Cells Rule</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="codemirror/lib/codemirror.css">
 </head>
 <body>
   <header>
@@ -12,14 +13,21 @@
 
   <main>
     <div id="controls">
-      <label for="rule-input">Your local rule (JavaScript):</label>
-      <textarea id="rule-input">// Example: return (aliveNeighbors === 3) || (self && aliveNeighbors === 2);</textarea>
+      <label for="editor">Your rule function (JS):</label>
+      <textarea id="editor">// Define how your cells behave
+function decide(neighborhood) {
+  // Example: move randomly
+  const dirs = ['up', 'down', 'left', 'right', 'stay'];
+  return dirs[Math.floor(Math.random() * dirs.length)];
+}</textarea>
       <button id="join-btn">Join Game</button>
     </div>
 
     <canvas id="game-canvas" width="600" height="600"></canvas>
   </main>
 
+  <script src="codemirror/lib/codemirror.js"></script>
+  <script src="codemirror/mode/javascript/javascript.js"></script>
   <script src="rules.js"></script>
   <script src="cells_rule.js"></script>
 </body>

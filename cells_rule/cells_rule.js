@@ -6,7 +6,6 @@ window.onload = function () {
     const cols = 50;
     const cellSize = canvas.width / cols;
   
-    // Each cell is either null or { ownerId: string, alive: true }
     let grid = Array(rows).fill().map(() => Array(cols).fill(null));
   
     function resetGrid() {
@@ -36,26 +35,27 @@ window.onload = function () {
       }
     }
   
-    function countAliveNeighbors(x, y) {
-      const offsets = [-1, 0, 1];
-      const neighborCounts = {};
-      let totalAlive = 0;
-  
-      for (let dy of offsets) {
-        for (let dx of offsets) {
-          if (dx === 0 && dy === 0) continue;
+    function getNeighborhood(x, y) {
+      const n = [];
+      for (let dy = -1; dy <= 1; dy++) {
+        const row = [];
+        for (let dx = -1; dx <= 1; dx++) {
           const nx = (x + dx + cols) % cols;
           const ny = (y + dy + rows) % rows;
-          const neighbor = grid[ny][nx];
-          if (neighbor) {
-            totalAlive++;
-            neighborCounts[neighbor.ownerId] = (neighborCounts[neighbor.ownerId] || 0) + 1;
-          }
+          row.push(grid[ny][nx]);
         }
+        n.push(row);
       }
-  
-      return { totalAlive, neighborCounts };
+      return n;
     }
+  
+    const directionOffsets = {
+      up: [0, -1],
+      down: [0, 1],
+      left: [-1, 0],
+      right: [1, 0],
+      stay: [0, 0],
+    };
   
     function updateGrid() {
       const newGrid = Array(rows).fill().map(() => Array(cols).fill(null));
@@ -63,21 +63,30 @@ window.onload = function () {
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const current = grid[y][x];
-          const { totalAlive, neighborCounts } = countAliveNeighbors(x, y);
+          if (!current) continue;
   
-          const topPlayer = Object.entries(neighborCounts).sort((a, b) => b[1] - a[1])[0];
-          const winningId = topPlayer ? topPlayer[0] : null;
-          const rule = playerRules[winningId];
+          const rule = playerRules[current.ownerId];
+          if (!rule) continue;
   
-          if (rule) {
-            try {
-              const willLive = rule(!!current, totalAlive);
-              if (willLive) {
-                newGrid[y][x] = { ownerId: winningId, alive: true };
-              }
-            } catch (e) {
-              console.warn("Error in player rule:", e.message);
-            }
+          const neighborhood = getNeighborhood(x, y);
+          let action = "stay";
+  
+          try {
+            action = rule(neighborhood);
+          } catch (e) {
+            console.warn("Error in rule:", e.message);
+          }
+  
+          const [dx, dy] = directionOffsets[action] || [0, 0];
+          const nx = (x + dx + cols) % cols;
+          const ny = (y + dy + rows) % rows;
+  
+          // Move if destination is empty
+          if (!newGrid[ny][nx]) {
+            newGrid[ny][nx] = { ...current };
+          } else {
+            // If collision, stay in place
+            newGrid[y][x] = { ...current };
           }
         }
       }
@@ -85,12 +94,20 @@ window.onload = function () {
       grid = newGrid;
     }
   
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+      lineNumbers: true,
+      mode: "javascript",
+      theme: "default",
+      viewportMargin: Infinity,
+    });
+  
     document.getElementById("join-btn").addEventListener("click", () => {
-      const ruleSource = document.getElementById("rule-input").value;
+      const ruleSource = editor.getValue();
       const playerId = Math.random().toString(36).substring(2, 8);
       setPlayerRule(playerId, ruleSource);
   
-      for (let i = 0; i < 50; i++) {
+      // Spawn player's cells
+      for (let i = 0; i < 30; i++) {
         const x = Math.floor(Math.random() * cols);
         const y = Math.floor(Math.random() * rows);
         grid[y][x] = { ownerId: playerId, alive: true };
