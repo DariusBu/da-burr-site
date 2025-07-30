@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cells Rule</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Cells Rule – Multiplayer Cellular Automaton</h1>
+  </header>
+
+  <main>
+    <div id="controls">
+      <label for="rule-input">Your local rule (JavaScript):</label>
+      <textarea id="rule-input">// Example: return (aliveNeighbors === 3) || (self && aliveNeighbors === 2);</textarea>
+      <button id="join-btn">Join Game</button>
+    </div>
+
+    <canvas id="game-canvas" width="600" height="600"></canvas>
+  </main>
+
+  <script src="rules.js"></script>
+  <script src="cells_rule.js"></script>
+</body>
+</html>
