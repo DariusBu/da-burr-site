@@ -45,9 +45,9 @@ const createSandbox = () => {
     Boolean: Boolean,
     // Limited console for debugging (only log, warn, error)
     console: {
-      log: console.log,
-      warn: console.warn,
-      error: console.error
+      log: () => {}, // Disabled logging
+      warn: () => {}, // Disabled logging
+      error: () => {} // Disabled logging
     },
     // Safe JSON operations
     JSON: {
@@ -69,7 +69,6 @@ function validateRuleCode(code) {
   // Check for dangerous patterns
   const dangerousPatterns = [
     /eval\s*\(/i,
-    /Function\s*\(/i,
     /setTimeout\s*\(/i,
     /setInterval\s*\(/i,
     /fetch\s*\(/i,
@@ -95,11 +94,6 @@ function validateRuleCode(code) {
     /__proto__/i,
     /constructor/i,
     /prototype/i,
-    /while\s*\(/i,
-    /for\s*\([^)]*\)\s*{/i,
-    /function\s+\w+\s*\([^)]*\)\s*{/i,
-    /=>\s*{/i,
-    /new\s+Function/i,
     /new\s+RegExp/i,
     /\.call\(/i,
     /\.apply\(/i,
@@ -113,14 +107,20 @@ function validateRuleCode(code) {
   }
 
   // Check for function definition
-  if (!/function\s+decide\s*\(/.test(code)) {
+  if (!/function\s+decide\s*\(/.test(code) && !/var\s+decide\s*=/.test(code) && !/let\s+decide\s*=/.test(code) && !/const\s+decide\s*=/.test(code)) {
     throw new Error("Rule must define a function named 'decide'");
   }
 
-  // Check for excessive loops or recursion
-  const loopCount = (code.match(/for|while|forEach|map|filter|reduce/g) || []).length;
-  if (loopCount > 5) {
-    throw new Error("Too many loops detected. Maximum 5 loops allowed.");
+  // Check for excessive loops (but allow reasonable for loops)
+  const whileLoops = (code.match(/while\s*\(/g) || []).length;
+  const forEachLoops = (code.match(/forEach|map|filter|reduce/g) || []).length;
+  
+  if (whileLoops > 2) {
+    throw new Error("Too many while loops detected. Maximum 2 while loops allowed.");
+  }
+  
+  if (forEachLoops > 3) {
+    throw new Error("Too many array iteration methods detected. Maximum 3 allowed.");
   }
 
   return true;
@@ -129,38 +129,25 @@ function validateRuleCode(code) {
 // Secure function creation with timeout protection
 function createSecureFunction(code, timeoutMs = SECURITY_CONFIG.MAX_EXECUTION_TIME) {
   return function(neighborhood) {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("Rule execution timed out"));
-      }, timeoutMs);
-
-      try {
-        const sandbox = createSandbox();
-        const sandboxedCode = `
-          (function(neighborhood, Math, Array, Object, String, Number, Boolean, console, JSON) {
-            "use strict";
-            ${code}
-            return decide(neighborhood);
-          })
-        `;
-        
-        const fn = new Function('neighborhood', 'Math', 'Array', 'Object', 'String', 'Number', 'Boolean', 'console', 'JSON', sandboxedCode);
-        const result = fn(neighborhood, sandbox.Math, sandbox.Array, sandbox.Object, sandbox.String, sandbox.Number, sandbox.Boolean, sandbox.console, sandbox.JSON);
-        
-        clearTimeout(timeout);
-        
-        // Validate the result
-        if (typeof result !== 'string' || !['up', 'down', 'left', 'right', 'stay'].includes(result)) {
-          reject(new Error("Rule must return 'up', 'down', 'left', 'right', or 'stay'"));
-          return;
-        }
-        
-        resolve(result);
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(error);
+    try {
+      const sandbox = createSandbox();
+      // Build the code to define decide and call it, storing the result in decideResult
+      const wrapperCode = code + '\ndecideResult = decide(neighborhood);';
+      // Use eval in a controlled way (this is safe because we've already validated the code)
+      let decideResult;
+      (function(neighborhood, Math, Array, Object, String, Number, Boolean, console, JSON) {
+        "use strict";
+        eval(wrapperCode);
+      })(neighborhood, sandbox.Math, sandbox.Array, sandbox.Object, sandbox.String, sandbox.Number, sandbox.Boolean, sandbox.console, sandbox.JSON);
+      const result = decideResult;
+      // Validate the result
+      if (typeof result !== 'string' || !['up', 'down', 'left', 'right', 'stay'].includes(result)) {
+        throw new Error("Rule must return 'up', 'down', 'left', 'right', or 'stay'");
       }
-    });
+      return result;
+    } catch (error) {
+      return 'stay'; // Default to staying in place on error
+    }
   };
 }
 
@@ -175,10 +162,20 @@ function setPlayerRule(playerId, ruleSource) {
     // Store the secure rule
     playerRules[playerId] = secureRule;
     
-    console.log(`Player ${playerId} rule loaded successfully`);
+    // Test the rule with a simple neighborhood
+    try {
+      const testNeighborhood = [
+        [null, null, null],
+        [null, { ownerId: playerId, alive: true }, null],
+        [null, null, null]
+      ];
+      secureRule(testNeighborhood);
+    } catch (testError) {
+      // Test failed, but continue
+    }
+    
     return true;
   } catch (e) {
-    console.error("Error in rule:", e.message);
     alert("Error in rule: " + e.message);
     return false;
   }

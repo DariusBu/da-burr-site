@@ -12,6 +12,15 @@
   </header>
 
   <main>
+    <div id="multiplayer-panel">
+      <div id="connection-status" class="status disconnected">Disconnected</div>
+      <div id="user-info"></div>
+      <div id="user-list-container">
+        <h3>Players Online</h3>
+        <div id="user-list"></div>
+      </div>
+    </div>
+
     <div id="controls">
       <label for="editor">Your rule function (JS):</label>
       <div id="rule-examples">
@@ -28,41 +37,20 @@
 // The decide function receives a 3x3 neighborhood array
 // Return: 'up', 'down', 'left', 'right', or 'stay'
 function decide(neighborhood) {
-  // Example: move randomly with some intelligence
-  const center = neighborhood[1][1]; // Current cell
-  const empty = [];
-  
-  // Find empty spaces around us
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      if (dx === 0 && dy === 0) continue; // Skip center
-      const cell = neighborhood[1 + dy][1 + dx];
-      if (!cell) {
-        empty.push([dx, dy]);
-      }
-    }
-  }
-  
-  // If we have empty spaces, move to one randomly
-  if (empty.length > 0) {
-    const [dx, dy] = empty[Math.floor(Math.random() * empty.length)];
-    if (dx === -1) return 'left';
-    if (dx === 1) return 'right';
-    if (dy === -1) return 'up';
-    if (dy === 1) return 'down';
-  }
-  
-  return 'stay';
+  return 'up';
 }</textarea>
-      <button id="join-btn">Join Game</button>
+      <button id="join-btn">Update Rule</button>
     </div>
 
     <canvas id="game-canvas" width="600" height="600"></canvas>
+    
+    <div id="error-message" style="display: none;"></div>
   </main>
 
   <script src="codemirror/lib/codemirror.js"></script>
   <script src="codemirror/mode/javascript/javascript.js"></script>
   <script src="rules.js"></script>
+  <script src="ws-client.js"></script>
   <script src="cells_rule.js"></script>
 </body>
 </html>

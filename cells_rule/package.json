@@ -1,0 +1,21 @@
+{
+  "name": "cells-rule-server",
+  "version": "1.0.0",
+  "description": "Multiplayer server for Cells Rule game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.13.0"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "websocket",
+    "cellular-automaton"
+  ],
+  "author": "Darius-Alexander Burr",
+  "license": "MIT"
+} 
