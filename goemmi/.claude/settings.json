@@ -24,7 +24,9 @@
       "Bash(sed -i 's|  <img src=\"resources/logos/Goose_Logo_Red.png\" alt=\"\" class=\"page-goose-bg\" aria-hidden=\"true\" loading=\"lazy\">||' /home/dburr/projects/GoEMMI/speakers.html)",
       "Bash(sed -i \\\\ *)",
       "Bash(git commit -m ' *)",
-      "WebFetch(domain:compneurobio.org)"
+      "WebFetch(domain:compneurobio.org)",
+      "Bash(sed -i 's|<html lang=\"de\">|<html lang=\"en\">|' /home/dburr/projects/GoEMMI/impressum.html)",
+      "Bash(sed -i 's|<title>Impressum — GoEMMI 2027</title>|<title>Legal Notice — GoEMMI 2027</title>|' /home/dburr/projects/GoEMMI/impressum.html)"
     ],
     "additionalDirectories": [
       "/home/dburr/projects/GoEMMI"
