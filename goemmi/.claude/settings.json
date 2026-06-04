@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:priesemann-group.github.io)",
+      "Bash(curl -s https://priesemann-group.github.io/)",
+      "Bash(curl -s https://priesemann-group.github.io/pages/impressum.html)",
+      "Bash(curl -s https://priesemann-group.github.io/impressum.html)",
+      "Bash(curl -s https://priesemann-group.github.io/content/impressum.html)",
+      "Bash(convert /home/dburr/projects/GoEMMI/resources/logos/Goose_Logo_Red.png -background white -flatten /home/dburr/projects/GoEMMI/resources/logos/Goose_Logo_White_bg.png)",
+      "Bash(sed -i 's|  <img src=\"resources/logos/Goose_Logo_Red.png\" alt=\"\" class=\"page-goose-bg\" aria-hidden=\"true\" loading=\"lazy\">||g' /home/dburr/projects/GoEMMI/*.html)",
+      "Bash(convert /home/dburr/projects/GoEMMI/resources/logos/Goose_Logo_White_bg.png -fx \"0.85 + 0.15 * u\" /home/dburr/projects/GoEMMI/resources/logos/Goose_Logo_Faint.png)",
+      "Bash(sed -i 's|<span class=\"calendar-strip-sep\">·</span>||g' /home/dburr/projects/GoEMMI/*.html)",
+      "Bash(sed -i 's|<strong>No registration fee.</strong> No reference letters required.|<strong>No registration fee</strong> —|' /home/dburr/projects/GoEMMI/index.html)",
+      "Bash(sed -i 's|<strong>Venue:</strong> Max Planck|<strong>Venue</strong> — Max Planck|' /home/dburr/projects/GoEMMI/index.html)",
+      "Bash(git -C /home/dburr/projects/GoEMMI show HEAD:speakers.html)",
+      "Bash(git -C /home/dburr/projects/GoEMMI stash -- speakers.html)",
+      "Bash(sed -i 's|src=\"resources/speakers/Nicolas_Brunel.jpg\"|src=\"https://scholars.duke.edu/profile-images/full/0785756.jpg\"|' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i 's|src=\"resources/speakers/Adrienne_Fairhall.jpg\"|src=\"https://nbio.uw.edu/wp-content/uploads/2025/04/Fairhall-Adrienne-high-res.jpg\"|' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i 's|src=\"resources/speakers/Gonzalo_Polavieja.jpg\"|src=\"https://lh3.googleusercontent.com/a-/AOh14GgeuHnMwYsUlrjc_6PKsuFEYtaTJd2LOF7PXMOGyRVDiNoZtY49JuPfU5LOVILP1ViZ8FkU56gj8pXJUJjSv7JKTchct1X4Wq5nxnOkNPS67Y1laIbKmMY_gT44rdpVqrt3WivwZOpiavJpdqUSUOxATs-J7iQjP4WARgrxHYQR4U_Bp1HyLTZc7dbDj3QhzI0eAYJuMHcHebewZI5zeOKvLaocjrcnUcaqaHQm66pdBwg6mOiIWdErYTZesfpeXT0bzk6ZYFPqsmrnd_tIBR9IXkDb9-CZKuch7_YLLbhQkO4YPBqnYEb8EcUXJj_Jncmja5wFe9eAJ-rUA1CARE7kMojH9BkHOX9K4S6KikcP0fNowlOLzGK1USaVUdekix1D7jEekkpQRGIHtJzqc-Yz8OlMG0zOZQcSQDI44z0V0w2cc850w5ZnIGGDhNFETYbgzi5Tee1Cwe8WVtnwBtGB_CvsbaOgCRa1sIoXsaUgF_of1TY-gyORu1YQH6kWT2K-eIlMdncAut6qxG1ssul8vkWMduJfgy41tg9Ur2cUilPxIGtOXAuaFZohUe_QqgDIupKpk8EVnwU6o0VXZ0zT2nncnS43Z6h988o6hXXRPQv2ncNsltrqP3BHuLVqYu0q3hp-WnxzLf1bxCqAdhWIc5ESlRJM3YBv2AwpTIFxEd2RimCXTkvP6dG4DWpeCg2D15PsZhtzahbFnpxv7s5l5zAdG9g1QPQCk4djjHuZgCz6AfK8L-se8kLHQ92m6vzAbA\"|' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i 's|src=\"resources/speakers/Karoline_Wiesner.jpg\"|src=\"https://www.scienceofintelligence.de/wp-content/uploads/2021/12/karoline_wiesner.jpg\"|' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i 's|<span class=\"acronym\">EM</span>ergent|<span class=\"acronym\">Em</span>ergent|g' /home/dburr/projects/GoEMMI/index.html /home/dburr/projects/GoEMMI/organizers.html /home/dburr/projects/GoEMMI/faq.html)",
+      "Bash(sed -i 's|^<div class=\"calendar-strip-dates\">|    <div class=\"calendar-strip-dates\">|' /home/dburr/projects/GoEMMI/index.html)",
+      "Bash(sed -i 's|    <a href=\"schedule.html\">Schedule</a>\\\\n||; s|    <a href=\"schedule.html\">Schedule</a>||' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i 's|  <img src=\"resources/logos/Goose_Logo_Red.png\" alt=\"\" class=\"page-goose-bg\" aria-hidden=\"true\" loading=\"lazy\">||' /home/dburr/projects/GoEMMI/speakers.html)",
+      "Bash(sed -i \\\\ *)"
+    ],
+    "additionalDirectories": [
+      "/home/dburr/projects/GoEMMI"
+    ]
+  }
+}

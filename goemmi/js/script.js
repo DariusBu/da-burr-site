@@ -105,3 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 })();
+
+// Speaker bio modal
+(function () {
+  const modal = document.getElementById('bio-modal');
+  if (!modal) return;
+  const content = modal.querySelector('.bio-modal-content');
+  const closeBtn = modal.querySelector('.bio-modal-close');
+
+  document.querySelectorAll('.speaker-about-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const bioDiv = btn.closest('.speaker-content').querySelector('.speaker-bio-content');
+      if (bioDiv) content.innerHTML = bioDiv.innerHTML;
+      modal.removeAttribute('hidden');
+    });
+  });
+
+  closeBtn.addEventListener('click', function () { modal.setAttribute('hidden', ''); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) modal.setAttribute('hidden', ''); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.setAttribute('hidden', ''); });
+})();
