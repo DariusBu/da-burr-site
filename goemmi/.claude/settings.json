@@ -23,7 +23,8 @@
       "Bash(sed -i 's|    <a href=\"schedule.html\">Schedule</a>\\\\n||; s|    <a href=\"schedule.html\">Schedule</a>||' /home/dburr/projects/GoEMMI/speakers.html)",
       "Bash(sed -i 's|  <img src=\"resources/logos/Goose_Logo_Red.png\" alt=\"\" class=\"page-goose-bg\" aria-hidden=\"true\" loading=\"lazy\">||' /home/dburr/projects/GoEMMI/speakers.html)",
       "Bash(sed -i \\\\ *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "WebFetch(domain:compneurobio.org)"
     ],
     "additionalDirectories": [
       "/home/dburr/projects/GoEMMI"
