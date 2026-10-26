@@ -261,7 +261,7 @@ function draw() {
     top = 1.4 * em;  // the upper pools' labels
     const unit = (h - top - 2.8 * em - 1.81 * gap) / 5.7, Rc = 1.6 * unit + gap;  // the circle's extent + the single pool fit the height
     cx = 0.3 * w; const ccy = top + 0.81 * Rc + 0.8 * unit;
-    const ANG = { [P]: 90, [D]: 18, [L]: -54, [R]: -126, [F]: 162 };  // degrees, clockwise from the right (canvas y down)
+    const ANG = { [P]: 90, [D]: 162, [L]: 234, [R]: 306, [F]: 18 };  // degrees, clockwise from the right (canvas y down): the cycle runs counter-clockwise
     pools.forEach((pl, k) => { const a = ANG[k] * Math.PI / 180; pl.R = pl.r * unit; pl.cx = cx + Rc * Math.cos(a); pl.cy = ccy + Rc * Math.sin(a); pl.ang = a; });
     CIRC = { cx, cy: ccy, Rc };
   }
@@ -299,7 +299,7 @@ function draw() {
   }
   for (const s of spikes) { const age = simT - s.tHit; if (s.done && age < 150) { ctx.globalAlpha = 0.5 * (1 - age / 150); ctx.lineWidth = 0.14 * em; ctx.beginPath(); ctx.arc(pp.cx, pp.cy, pp.R, 0, 2 * Math.PI); ctx.stroke(); ctx.globalAlpha = 1; } }
   // the arc's control point: well to the right, at the middle height
-  const arcCtrl = CMP ? [CIRC.cx + 1.7 * CIRC.Rc * Math.cos(140 * Math.PI / 180), CIRC.cy + 1.7 * CIRC.Rc * Math.sin(140 * Math.PI / 180)]  // outside the circle, between the primed and the fused pool
+  const arcCtrl = CMP ? [CIRC.cx + 1.7 * CIRC.Rc * Math.cos(40 * Math.PI / 180), CIRC.cy + 1.7 * CIRC.Rc * Math.sin(40 * Math.PI / 180)]  // outside the circle, between the primed and the fused pool
                       : [cx + 0.4 * w, (pools[F].cy + pools[P].cy) / 2];  // the arc's widest point is at half the control offset: just past the labels
   // vesicles: dashed empty when fused, solid empty when recovered, filled from loaded on; in flight, interpolated
   for (const v of ves) {
