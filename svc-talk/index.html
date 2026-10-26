@@ -155,19 +155,6 @@
 <p><span class="outline-when">tomorrow!</span></p>
 </div>
 </div>
-<aside class="notes">
-<p>Three points; today only the first. The second has its own slide show, the third is for another day.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section>
 <section id="how-to-stabilize-recurrent-excitation" class="title-slide slide level1 chapter chapter-a center">
@@ -186,20 +173,6 @@
 <iframe data-src="widgets/live_sim/lif.html?V=-50.8&amp;fs=1.15&amp;stages" style="width:100%; height:520px; border:0">
 </iframe>
 <p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
-<aside class="notes">
-<p>Every neuron in the talk is this: a leaky integrator of its input current, a threshold, a reset, and quantal release at its synapses. Purple square = the neuron, it flashes when it spikes; green = synaptic currents.</p>
-<p>The external input sets the leak potential (orange). Below threshold the neuron fires only on the membrane noise (grey strip): the rate against the input is the grey curve, and the live point sits on it.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="regimes-of-network-activity" class="slide level2 rmap-slide">
 <h2>Regimes of network activity</h2>
@@ -321,21 +294,6 @@ silent
 <span>regular</span><span>irregular</span>
 </div>
 </div>
-<aside class="notes">
-<p>Every square is one neuron (or one recorded unit), lit when it spikes and fading over 100 ms. Dark frames are recordings, 81 units each: mouse V1 and hippocampus from an Allen Neuropixels session (awake, no stimulus), macaque motor cortex from two Utah-array sessions of a reach-to-grasp task. Dashed frames are the model, running live, coloured by regime: blue noise driven, green reverberating, red the states that are avoided (silent is drawn, not simulated; runaway is slowed 50-fold, each neuron fires at 400 Hz).</p>
-<p>Left to right: how much the neurons fire together (mean pairwise correlation of 100 ms counts). Bottom to top: how irregular each neuron fires (CV of the interspike interval, 1 = Poisson). All four recordings are irregular (CV 1.15 to 1.65) and weakly correlated (0.01 to 0.16). The model’s noise-driven (the sweep’s “input driven”) and reverberating regimes are more regular (CV 0.5 to 0.6) at similar correlations. Bursting is at the right: the population fires in volleys (correlation 0.75, CV 1.1).</p>
-<p>The bottom band and the right band are where biology does not go: clock-like regular firing (no recurrence, input above threshold, CV 0.1), a silent network, runaway excitation (static synapses: every neuron at its refractory limit, 400 Hz, CV 0.02), and the fully synchronous bursts. The next slides ask what keeps a recurrent network out of them.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="computation-relies-on-stability" class="slide level2">
 <h2>Computation relies on stability</h2>
@@ -403,20 +361,6 @@ reverberating
 <iframe class="cmp-row" style="left:260px;top:450px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;wallsync&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51&amp;q=0.5&amp;init=init/task_reverb.js">
 </iframe>
 </div>
-<aside class="notes">
-<p>The same task for every regime of the map: each neuron gets a weak input along a random preferred direction from a slow 2D signal tracing a figure eight (left, purple arrows). A linear readout of the filtered spikes (green) is trained online to redraw it: the matrix in the second column shows the readout weights, the third the signal and the readout’s trace, the bar R² over the last 5 s (the dash: the last second).</p>
-<p>Offline (widgets/spike_play/task_offline.js, 40 s, R² over the last 10 s, three seeds): runaway carries nothing, the activity does not depend on the input (R² ≈ 0). Bursting (V = −52.3 mV, q = 1.15 mV) is mostly silent with a population burst every 7 s or so: R² 0 to 0.25. Noise driven (−51.9, 0.2; 1 Hz; the map’s “input driven” regime, fluctuation driven) 0.7 to 0.75. Reverberating (−51, 0.5; 7.5 Hz) 0.91 to 0.93. The bar on the slide scores the smoothed trace, which reads higher (bursting ~0.4, noise driven ~0.86, reverberating ~0.96). No task setting (delay, driven fraction, gain, period, readout subset, nonlinear target) puts the reverberating net above a strongly driven one; the order here comes from the noise-driven point being weakly driven. The question for the talk: what keeps a recurrent network in the regimes that compute.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="recurrent-excitation-requires-a-negative-feedback" class="slide level2">
 <h2>Recurrent excitation requires a negative feedback</h2>
@@ -430,20 +374,6 @@ reverberating
 <iframe class="vm-io" data-src="widgets/live_sim/input_rate.html?group=duel&amp;param=V&amp;lo=-53&amp;hi=-48&amp;V=-53&amp;yscale=log&amp;traildist=3&amp;trailhold=6&amp;ids=A&amp;statecolors=c4c4ce,7B52B8,3D85C8&amp;ylabel=rate (Hz)">
 </iframe>
 </div>
-<aside class="notes">
-<p>One network. The slider is the external input; the top (-50 mV) puts the resting potential at threshold. Click a square to make one neuron spike.</p>
-<p>Start with no recurrence (grey): the rate is the single neuron’s response to the input. Switch the recurrent excitation on (+, purple): a single spike is enough to set off the loop; every neuron ends up firing at its refractory limit, whatever the input. Switch the negative feedback on (−, blue): the rate follows the input again.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="why-it-blows-up-and-how-to-prevent-it" class="slide level2">
 <h2>Why it blows up, and how to prevent it</h2>
@@ -454,20 +384,6 @@ reverberating
 <iframe data-src="widgets/live_sim/microcircuit.html?in=1,0,0&amp;q=0.3&amp;fs=1.1&amp;stages" style="width:100%; height:420px; border:0">
 </iframe>
 <p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
-<aside class="notes">
-<p>The same microcircuit three times: 60 presynaptic units firing at the in-rate converge on one neuron (the network’s parameters). Spikes travel along the axons, released quanta (green) jump into the neuron, the neuron’s spikes leave to the right. Below: in rate, the mean synaptic current, out rate.</p>
-<p>Left, static synapses: the current grows with the in-rate and the out-rate overshoots it: in a recurrent network this is the runaway. Middle: a fifth of the inputs are inhibitory (blue) and fire at the same rate, so their current cancels the excitatory one on average: the out-rate follows the input only. Right: depleting synapses: each spike releases less the faster the unit fires, so the current saturates. Both change the response function from in-rate to current.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="response-function-with-synaptic-depression" class="slide level2">
 <h2>Response function with synaptic depression</h2>
@@ -480,20 +396,6 @@ reverberating
 <iframe data-src="widgets/live_sim/synapse.html?rate=5&amp;slots=20&amp;speed=2&amp;fs=1.25&amp;stages" style="width:100%; height:610px; border:0">
 </iframe>
 <p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
-<aside class="notes">
-<p>One synapse. Each spike (from the left) releases every filled slot with probability 0.2; each empty slot refills at the recovery rate k (default 1/12 s), the vesicle fading in. Released vesicles leave to the right. Under each train, its rate: the events currently on the lane, divided by the 2 s they take to cross.</p>
-<p>Raise the presynaptic rate: the slots empty out, each spike releases less, and the vesicle rate stops growing at the dashed line N · k: at steady state release equals refill, and refill (empty slots × k) can never exceed N · k. Raise k: the plateau moves up. The cap is a property of the synapse, not of the input.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="network-effect-of-the-negative-feedback" class="slide level2">
 <h2>Network effect of the negative feedback</h2>
@@ -542,20 +444,6 @@ depletion
 </iframe>
 </div>
 </div>
-<aside class="notes">
-<p>Two networks, same external input (the slider on top). Top: 80 excitatory and 20 inhibitory neurons (blue), static synapses, inhibitory synapses 4 times stronger. Bottom: purely excitatory with depletion; each neuron’s square shrinks as its primed pool empties.</p>
-<p>Middle: the inhibitory population tracks the excitatory one (the diagonal: balance), and the depletion network’s missing resources rise with its rate (the negative feedback). Right: the mean recurrent synaptic current over time. Both are insensitive to the input, at different values: ~0 with inhibition (excitation and inhibition cancel: subtractive), a flat ~0.5 mV with depletion (the release rate saturates: a multiplicative cap).</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="breakout" class="slide level2 progress-end">
 <h2>Breakout</h2>
@@ -564,19 +452,6 @@ depletion
 <li>On the next slide, explore the different regimes of network dynamics</li>
 <li>On the slide after that, explore the difference between the single pool model and the vesicle cycle model</li>
 </ul>
-<aside class="notes">
-<p>Hand over to the students: the explorer, then the comparison of the two synapse models.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="explore-the-regimes" class="slide level2">
 <h2>Explore the regimes</h2>
@@ -587,19 +462,6 @@ depletion
      population rate, rate vs resources, ISI histogram. -->
 <iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;lab&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=SP&amp;color=spike&amp;win=5&amp;fs=1.35&amp;show=raster,psd,rate,phase" style="width:100%; height:540px; border:0">
 </iframe>
-<aside class="notes">
-<p>The students’ explorer. Walk the external input and the synaptic strength through the regimes and watch the raster, the rate’s spectrum (flat when noise driven, a low-frequency hump when reverberating, a sharp peak with harmonics when bursting), the rate–resources loop and the ISI histogram. Then change the synapse: a longer recovery or a larger capacity.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="the-full-vesicle-cycle" class="slide level2">
 <h2>The full vesicle cycle</h2>
@@ -611,19 +473,6 @@ depletion
      the plot set both models at once. -->
 <iframe data-src="widgets/live_sim/svc.html?rate=5&amp;fs=1.2&amp;compare" style="width:100%; height:610px; border:0">
 </iframe>
-<aside class="notes">
-<p>The full cycle, one vesicle at a time. A spike releases each primed vesicle with probability 0.2; the released vesicle (empty, dashed) returns to the fused membrane. From there, vesicles are recovered at a fixed trickle of one per 3 s (solid outline), loaded (filled again), docked, and primed. The trickle is the bottleneck: it is what caps the vesicle rate, whatever the spike rate.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 
 </section></section>
     </div>
