@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spike playback</title>
+<!--
+Plays a recorded population (data/<name>.json, written by extract.py) on the neuron matrix of live_sim:
+the same square grid, the same colours, a cell lit by exp(-time since the unit's last spike / tau).
+
+  spike_play.html?data=data/mouse_V1.js&tau=100&speed=1&theme=slides
+
+  data    the snippet: a script calling spikePlayData({N, dur_ms, t: [ms, sorted], i: [unit]}) (loads from file://)
+  tau     fade of a spike in ms (100, like live_sim's color=spike)
+  speed   x real time (1)
+  loop    restart at the end (on; ?loop=0 stops)
+  start   start the playback this many ms in (0)
+  theme   slides: transparent background, the deck's colours
+  res     canvas pixels per CSS pixel (2 in an iframe, so reveal's scaling stays sharp)
+  nowait  in an iframe, don't wait for reveal's slide:start
+
+In the deck it behaves like live_sim: it waits for reveal's slide:start, pauses on slide:stop, doesn't
+play in the speaker view's ?receiver previews, and hands key presses back to reveal.
+-->
+<style>
+:root { --bg: #f6f6f4; --panel: #ffffff; --ink: #1d1d1f; }
+:root[data-theme="slides"] { --bg: transparent; --panel: transparent; --ink: #222; }
+:root[data-theme="dark"] { --bg: #141416; --panel: #1d1d20; --ink: #ececef; }
+html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; }
+#msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+       color: var(--ink); font: 13px system-ui, sans-serif; opacity: .6; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="grid"></canvas>
+<div id="msg" hidden></div>
+<script>
+const Q = new URLSearchParams(location.search);
+const flag = (k, d) => Q.has(k) ? !/^(0|false|no|off)$/i.test(Q.get(k)) : d;
+const num = (k, d) => { const v = parseFloat(Q.get(k)); return Number.isFinite(v) ? v : d; };
+const framed = window.parent !== window;
+let receiver = false;  // reveal's speaker view loads the deck again with ?receiver: don't play there
+if (framed) {
+  try { receiver = /[?&]receiver\b/.test(window.parent.location.search); }
+  catch (e) { receiver = /[?&]receiver\b/.test(document.referrer); }
+}
+const OPT = {
+  data: Q.get("data"), tau: num("tau", 100), speed: num("speed", 1), loop: flag("loop", true),
+  start: num("start", 0), theme: Q.get("theme"), res: num("res", framed ? 2 : 1),
+  wait: framed && !flag("nowait", false),
+};
+if (OPT.theme) document.documentElement.dataset.theme = OPT.theme;
+
+const SPIKE_RAMP = ["#c9c9d3", "#440154"];  // live_sim: silent -> just spiked
+const hexRGB = h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16));
+const [C0, C1] = SPIKE_RAMP.map(hexRGB);
+const SHADES = 64, shade = [];
+for (let l = 0; l < SHADES; l++) {
+  const f = l / (SHADES - 1);
+  shade.push(`rgb(${C0.map((c, k) => Math.round(c + (C1[k] - c) * f)).join(",")})`);
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const cv = document.getElementById("grid"), msg = document.getElementById("msg");
+let D = null, N = 0, lastSpk = null, ptr = 0, time = 0;
+let suspended = OPT.wait || receiver, lastFrame = performance.now();
+
+function reset(t0) {
+  time = t0; ptr = 0; lastSpk.fill(-Infinity);
+  while (ptr < D.t.length && D.t[ptr] < time) { lastSpk[D.i[ptr]] = D.t[ptr]; ptr++; }
+}
+
+function advance(dt) {
+  time += dt;
+  while (ptr < D.t.length && D.t[ptr] <= time) { lastSpk[D.i[ptr]] = D.t[ptr]; ptr++; }
+  if (time >= D.dur_ms) {
+    if (OPT.loop) reset(time - D.dur_ms); else time = D.dur_ms;
+  }
+}
+
+function draw() {
+  const r = Math.max(1, OPT.res, devicePixelRatio || 1);
+  const W = Math.round(cv.clientWidth * r), H = Math.round(cv.clientHeight * r);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  if (!D) return;
+  // as live_sim's drawGrid: as many columns as the canvas' aspect asks for, 8 % padding per cell
+  const cols = Math.min(N, Math.ceil(Math.sqrt(N * W / H))), rows = Math.ceil(N / cols);
+  const cell = Math.min(W / cols, H / rows), pad = Math.max(1, cell * 0.08);
+  const x0 = (W - cols * cell) / 2, y0 = (H - rows * cell) / 2;
+  const panel = cssVar("--panel");
+  if (panel && panel !== "transparent") { ctx.fillStyle = panel; ctx.fillRect(x0, y0, cols * cell, rows * cell); }
+  for (let i = 0; i < N; i++) {
+    const b = Math.exp(-(time - lastSpk[i]) / OPT.tau);
+    ctx.fillStyle = shade[Math.min(SHADES - 1, Math.round(b * (SHADES - 1)))];
+    ctx.fillRect(x0 + (i % cols) * cell + pad, y0 + Math.floor(i / cols) * cell + pad, cell - 2 * pad, cell - 2 * pad);
+  }
+}
+
+function frame(now) {
+  const dt = Math.min(now - lastFrame, 100); lastFrame = now;
+  if (D && !suspended && innerWidth) advance(dt * OPT.speed);
+  draw();
+  requestAnimationFrame(frame);
+}
+
+window.spikePlayData = d => { D = d; N = d.N; lastSpk = new Float64Array(N); reset(OPT.start); };
+if (!OPT.data) { msg.hidden = false; msg.textContent = "?data=<snippet.js>"; }
+else {
+  const s = document.createElement("script");
+  s.src = OPT.data;
+  s.onerror = () => { msg.hidden = false; msg.textContent = `could not load ${OPT.data}`; };
+  document.head.appendChild(s);
+}
+
+window.addEventListener("message", ev => {
+  if (ev.data === "slide:start") { suspended = receiver; lastFrame = performance.now(); }
+  else if (ev.data === "slide:stop") suspended = true;
+});
+if (framed) {
+  // a click moves the keyboard focus into this frame: hand the keys (and the focus) back to reveal
+  document.addEventListener("keydown", ev => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key === "Tab") return;
+    ev.preventDefault();
+    window.parent.focus();
+    window.parent.postMessage(JSON.stringify({ method: "triggerKey", args: [ev.keyCode] }), "*");
+  });
+}
+document.addEventListener("pointerdown", () => { if (!receiver) suspended = false; }, true);
+new ResizeObserver(draw).observe(document.documentElement);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

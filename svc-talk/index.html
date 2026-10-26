@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="main_files/libs/clipboard/clipboard.min.js"></script>
+<script src="main_files/libs/quarto-html/tabby.min.js"></script>
+<script src="main_files/libs/quarto-html/popper.min.js"></script>
+<script src="main_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="main_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="main_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="main_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.27">
+
+  <title>Synaptic depression stabilizes recurrent excitation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="main_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="main_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="main_files/libs/revealjs/dist/theme/quarto-f9fb06ba4ff47278dc2b083fe78d7abe.css">
+  <link href="main_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="main_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="main_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="main_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-iframe="widgets/live_sim/live_sim.html?V=-51.2&amp;q=1&amp;N=600&amp;mouse&amp;panels=grid&amp;color=spike&amp;tau=40&amp;topo=spatial&amp;view=graph&amp;speed=0.125&amp;clean&amp;bg&amp;full&amp;pad=15,15,60,15&amp;autoplay&amp;notitles&amp;nohud&amp;theme=slides" data-background-interactive="true" class="quarto-title-block center">
+  <h1 class="title">Synaptic depression stabilizes recurrent excitation</h1>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="outline" class="slide level2">
+<h2>Outline</h2>
+<div class="fragment">
+<div class="outline-item outline-a">
+<p>How to stabilize recurrent excitation</p>
+<ul>
+<li>need for a negative feedback</li>
+<li>comparison of inhibition and depletion</li>
+<li>network effects</li>
+</ul>
+</div>
+</div>
+<div class="fragment">
+<div class="outline-item outline-b">
+<p>Realistic vesicle depletion can stabilize excitation</p>
+</div>
+</div>
+<div class="fragment">
+<div class="outline-item outline-c">
+<p>Mean-field theory</p>
+<p><span class="outline-when">tomorrow!</span></p>
+</div>
+</div>
+<aside class="notes">
+<p>Three points; today only the first. The second has its own slide show, the third is for another day.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section>
+<section id="how-to-stabilize-recurrent-excitation" class="title-slide slide level1 chapter chapter-a center">
+<h1>How to stabilize recurrent excitation</h1>
+
+</section>
+<section id="the-leaky-integrate-and-fire-neuron" class="slide level2">
+<h2>The leaky integrate-and-fire neuron</h2>
+<!-- widgets/live_sim/lif.html: the talk's neuron, alone. Top: a sketch. Middle: the input current reaching the soma
+     (purple, flashes at a spike), its spike train, a synapse, the postsynaptic current. Bottom: the membrane potential
+     (as the network widget's vm panel) and the firing rate against the external input (the orange slider is the x axis),
+     over the analytic rate. Fragments (?stages): the sketch alone; + the input current, the neuron, its spikes and
+     the input electrode; + the membrane monitor and its electrode; + the synapse, the postsynaptic current and its
+     electrode; + the rate plot with its slider. -->
+<iframe data-src="widgets/live_sim/lif.html?V=-50.8&amp;fs=1.05&amp;stages" style="width:100%; height:520px; border:0">
+</iframe>
+<p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
+<aside class="notes">
+<p>Every neuron in the talk is this: a leaky integrator of its input current, a threshold, a reset, and quantal release at its synapses. Purple square = the neuron, it flashes when it spikes; green = synaptic currents.</p>
+<p>The external input sets the leak potential (orange). Below threshold the neuron fires only on the membrane noise (grey strip): the rate against the input is the grey curve, and the live point sits on it.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="section" class="slide level2 rmap-slide">
+<h2></h2>
+<!-- The opener, right after the outline, to motivate the question (no title). The regime map: synchrony (x: mean pairwise correlation of 100 ms spike counts, log scale) against irregularity
+     (y: mean CV of the interspike interval). Every tile is the neuron matrix: recordings (solid frame) are played back by
+     widgets/spike_play, the model (dashed frame, coloured by regime: noise driven (the sweep's "input driven") blue, reverberating green, the
+     avoided states red) runs live in live_sim. Positions follow
+     widgets/spike_play/data/measures.json (extract.py), nudged apart where tiles overlapped; clock-like firing is
+     clamped to the edge and silent has no measure. Silent is not simulated (an SVG matrix of one colour); runaway runs at
+     1/50 real time with a 1 ms fade, so the 400 Hz firing shows as a flicker. Fragments: recordings (with the red bands of
+     the avoided states), then the model's regimes, then the avoided states' tiles. -->
+<div class="rmap">
+<div class="rmap-plot">
+<div class="rmap-legend">
+<span class="data">recordings</span><span class="model fragment" data-fragment-index="1">model</span>
+</div>
+<div class="rmap-zone zone-bottom">
+
+</div>
+<div class="rmap-zone zone-right">
+
+</div>
+<div class="tile data" style="left:595px;top:23px">
+<div class="box">
+<iframe data-src="widgets/spike_play/spike_play.html?theme=slides&amp;data=data/mouse_V1.js">
+</iframe>
+</div>
+<div class="cap">
+mouse V1
+</div>
+</div>
+<div class="tile data" style="left:350px;top:95px">
+<div class="box">
+<iframe data-src="widgets/spike_play/spike_play.html?theme=slides&amp;data=data/mouse_CA1.js">
+</iframe>
+</div>
+<div class="cap">
+mouse CA1
+</div>
+</div>
+<div class="tile data" style="left:119px;top:118px">
+<div class="box">
+<iframe data-src="widgets/spike_play/spike_play.html?theme=slides&amp;data=data/monkeyN_M1.js">
+</iframe>
+</div>
+<div class="cap">
+monkey M1 (N)
+</div>
+</div>
+<div class="tile data" style="left:501px;top:159px">
+<div class="box">
+<iframe data-src="widgets/spike_play/spike_play.html?theme=slides&amp;data=data/monkeyL_M1.js">
+</iframe>
+</div>
+<div class="cap">
+monkey M1 (L)
+</div>
+</div>
+<div class="tile model r-in fragment" data-fragment-index="1" style="left:66px;top:254px">
+<div class="box">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-50.75&amp;q=0.2&amp;init=init/rmap_noise.js">
+</iframe>
+</div>
+<div class="cap">
+noise driven
+</div>
+</div>
+<div class="tile model r-rev fragment" data-fragment-index="1" style="left:457px;top:295px">
+<div class="box">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-51.2&amp;q=1&amp;init=init/rmap_reverb.js">
+</iframe>
+</div>
+<div class="cap">
+reverberating
+</div>
+</div>
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:850px;top:159px">
+<div class="box">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-51.8&amp;q=1.15&amp;init=init/rmap_burst.js">
+</iframe>
+</div>
+<div class="cap">
+bursting
+</div>
+</div>
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:270px;top:390px">
+<div class="box">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=static&amp;init=init/rmap_runaway.js&amp;speed=0.02&amp;tau=1">
+</iframe>
+</div>
+<div class="cap">
+runaway
+</div>
+</div>
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:150px;top:390px">
+<div class="box">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-48&amp;q=0&amp;dep=static&amp;free&amp;init=init/rmap_clock.js&amp;speed=0.1&amp;tau=12">
+</iframe>
+</div>
+<div class="cap">
+clock-like
+</div>
+</div>
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:30px;top:390px">
+<div class="box">
+<svg viewbox="0 0 100 100">
+<defs><pattern id="pSilent" width="10" height="10" patternunits="userSpaceOnUse"><rect x="0.8" y="0.8" width="8.4" height="8.4" fill="#c9c9d3"></rect></pattern></defs><rect width="100" height="100" fill="url(#pSilent)"></rect>
+</svg>
+</div>
+<div class="cap">
+silent
+</div>
+</div>
+</div>
+<div class="rmap-x">
+<span>asynchronous</span><span>synchronous</span>
+</div>
+<div class="rmap-y">
+<span>regular</span><span>irregular</span>
+</div>
+</div>
+<aside class="notes">
+<p>Every square is one neuron (or one recorded unit), lit when it spikes and fading over 100 ms. Dark frames are recordings, 81 units each: mouse V1 and hippocampus from an Allen Neuropixels session (awake, no stimulus), macaque motor cortex from two Utah-array sessions of a reach-to-grasp task. Dashed frames are the model, running live, coloured by regime: blue noise driven, green reverberating, red the states that are avoided (silent is drawn, not simulated; runaway is slowed 50-fold, each neuron fires at 400 Hz).</p>
+<p>Left to right: how much the neurons fire together (mean pairwise correlation of 100 ms counts). Bottom to top: how irregular each neuron fires (CV of the interspike interval, 1 = Poisson). All four recordings are irregular (CV 1.15 to 1.65) and weakly correlated (0.01 to 0.16). The model’s noise-driven (the sweep’s “input driven”) and reverberating regimes are more regular (CV 0.5 to 0.6) at similar correlations. Bursting is at the right: the population fires in volleys (correlation 0.75, CV 1.1).</p>
+<p>The bottom band and the right band are where biology does not go: clock-like regular firing (no recurrence, input above threshold, CV 0.1), a silent network, runaway excitation (static synapses: every neuron at its refractory limit, 400 Hz, CV 0.02), and the fully synchronous bursts. The next slides ask what keeps a recurrent network out of them.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="which-regimes-carry-a-signal" class="slide level2">
+<h2>Which regimes carry a signal?</h2>
+<!-- The readout task of the chapter-1 slide, once per model regime of the regime map. Left: the input signal (a
+     live_sim with only the task panel fixed at stage 0, ?stage=0 without ?stages, so the slide's fragments don't
+     reveal its readout: the figure eight and its moving dot), centred on the
+     rows. Each row is one N = 100 network in live_sim's ?row layout (gap=56, dots=0.4): neurons | readout weights |
+     signal and prediction | R² bar, 100 px squares, so everything is at known px positions and the arrows (an SVG
+     overlay; heads drawn as triangles, since pandoc lowercases SVG attributes such as refX and breaks <marker>) and
+     the regime boxes (dashed, the map's colours, around the neurons only) are placed by hand: row i has its frame at
+     top 30 + 140 i, its columns at 0, 156 and 312 px from x = 260. The readout is mud green in every row.
+     The rows use their own points of the three regimes (bursting −52.3 / 1.15, input driven −51.9 / 0.2, reverberating
+     −51 / 0.5 mV), chosen so that R² rises down the slide; the map's tiles keep the points chosen for their look.
+     Every row starts from a saved state (?init, widgets/live_sim/snapshot.js): network settled and readout trained for
+     60 s, so the bars show their values from the first frame. The map's model tiles start settled the same way.
+     Fragments: the rows (label, box, arrows) appear one by one, the noise-driven row first, then the others top to
+     bottom; the row's frame is not a fragment
+     (reveal would not lazy-load it) but follows its box's fragment through the theme's CSS. -->
+<div class="cmp" style="height:556px">
+<svg class="cmp-arrows" width="1000" height="556">
+<path class="fragment drive" data-fragment-index="2" d="M195 290 L243.6 89.7"></path><path class="fragment drive head" data-fragment-index="2" d="M246 80 L248.5 90.9 L238.8 88.5 z"></path> <path class="fragment read" data-fragment-index="2" d="M370 80 L396.0 80.0"></path><path class="fragment read head" data-fragment-index="2" d="M406 80 L396.0 85.0 L396.0 75.0 z"></path> <path class="fragment read" data-fragment-index="2" d="M526 80 L552.0 80.0"></path><path class="fragment read head" data-fragment-index="2" d="M562 80 L552.0 85.0 L552.0 75.0 z"></path> <path class="fragment drive" data-fragment-index="3" d="M195 290 L240.1 228.1"></path><path class="fragment drive head" data-fragment-index="3" d="M246 220 L244.2 231.0 L236.1 225.1 z"></path> <path class="fragment read" data-fragment-index="3" d="M370 220 L396.0 220.0"></path><path class="fragment read head" data-fragment-index="3" d="M406 220 L396.0 225.0 L396.0 215.0 z"></path> <path class="fragment read" data-fragment-index="3" d="M526 220 L552.0 220.0"></path><path class="fragment read head" data-fragment-index="3" d="M562 220 L552.0 225.0 L552.0 215.0 z"></path> <path class="fragment drive" data-fragment-index="1" d="M195 290 L240.1 351.9"></path><path class="fragment drive head" data-fragment-index="1" d="M246 360 L236.1 354.9 L244.2 349.0 z"></path> <path class="fragment read" data-fragment-index="1" d="M370 360 L396.0 360.0"></path><path class="fragment read head" data-fragment-index="1" d="M406 360 L396.0 365.0 L396.0 355.0 z"></path> <path class="fragment read" data-fragment-index="1" d="M526 360 L552.0 360.0"></path><path class="fragment read head" data-fragment-index="1" d="M562 360 L552.0 365.0 L552.0 355.0 z"></path> <path class="fragment drive" data-fragment-index="4" d="M195 290 L243.6 490.3"></path><path class="fragment drive head" data-fragment-index="4" d="M246 500 L238.8 491.5 L248.5 489.1 z"></path> <path class="fragment read" data-fragment-index="4" d="M370 500 L396.0 500.0"></path><path class="fragment read head" data-fragment-index="4" d="M406 500 L396.0 505.0 L396.0 495.0 z"></path> <path class="fragment read" data-fragment-index="4" d="M526 500 L552.0 500.0"></path><path class="fragment read head" data-fragment-index="4" d="M562 500 L552.0 505.0 L552.0 495.0 z"></path>
+</svg>
+<div class="cmp-legend" style="left:522px;top:2px">
+<span class="sig">signal</span><span class="dec">decoding</span>
+</div>
+<div class="cmp-signal" style="left:0;top:160px">
+<div class="cap">
+input signal
+</div>
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=task&amp;stage=0&amp;nolegend&amp;notitles&amp;nohud&amp;N=10">
+</iframe>
+</div>
+<div class="cmp-lbl r-bad fragment" data-fragment-index="2" style="left:260px;top:2px">
+runaway
+</div>
+<div class="cmp-box r-bad fragment" data-fragment-index="2" style="left:255px;top:25px">
+
+</div>
+<iframe class="cmp-row" style="left:260px;top:30px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.5&amp;q=0.75&amp;dep=static&amp;init=init/task_runaway.js">
+</iframe>
+<div class="cmp-lbl r-bad fragment" data-fragment-index="3" style="left:260px;top:142px">
+bursting
+</div>
+<div class="cmp-box r-bad fragment" data-fragment-index="3" style="left:255px;top:165px">
+
+</div>
+<iframe class="cmp-row" style="left:260px;top:170px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-52.3&amp;q=1.15&amp;init=init/task_burst.js">
+</iframe>
+<div class="cmp-lbl r-in fragment" data-fragment-index="1" style="left:260px;top:282px">
+noise driven
+</div>
+<div class="cmp-box r-in fragment" data-fragment-index="1" style="left:255px;top:305px">
+
+</div>
+<iframe class="cmp-row" style="left:260px;top:310px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.9&amp;q=0.2&amp;init=init/task_noise.js">
+</iframe>
+<div class="cmp-lbl r-rev fragment" data-fragment-index="4" style="left:260px;top:422px">
+reverberating
+</div>
+<div class="cmp-box r-rev fragment" data-fragment-index="4" style="left:255px;top:445px">
+
+</div>
+<iframe class="cmp-row" style="left:260px;top:450px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51&amp;q=0.5&amp;init=init/task_reverb.js">
+</iframe>
+</div>
+<aside class="notes">
+<p>The same task for every regime of the map: each neuron gets a weak input along a random preferred direction from a slow 2D signal tracing a figure eight (left, purple arrows). A linear readout of the filtered spikes (green) is trained online to redraw it: the matrix in the second column shows the readout weights, the third the signal and the readout’s trace, the bar R² over the last 5 s (the dash: the last second).</p>
+<p>Offline (widgets/spike_play/task_offline.js, 40 s, R² over the last 10 s, three seeds): runaway carries nothing, the activity does not depend on the input (R² ≈ 0). Bursting (V = −52.3 mV, q = 1.15 mV) is mostly silent with a population burst every 7 s or so: R² 0 to 0.25. Noise driven (−51.9, 0.2; 1 Hz; the map’s “input driven” regime, fluctuation driven) 0.7 to 0.75. Reverberating (−51, 0.5; 7.5 Hz) 0.91 to 0.93. The bar on the slide scores the smoothed trace, which reads higher (bursting ~0.4, noise driven ~0.86, reverberating ~0.96). No task setting (delay, driven fraction, gain, period, readout subset, nonlinear target) puts the reverberating net above a strongly driven one; the order here comes from the noise-driven point being weakly driven. The question for the talk: what keeps a recurrent network in the regimes that compute.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="recurrent-excitation-runs-away" class="slide level2">
+<h2>Recurrent excitation runs away</h2>
+<!-- One purely excitatory network (N = 100, random connections). The slider is the external input (V_leak,
+     -53 to -48 mV; threshold is -50, so the top of the range drives the neurons regularly; ?free lets V leave the map). The widget's loops (?loops) toggle the recurrent coupling (+: q 0 / 0.75 mV) and the negative
+     feedback (−: static synapses / depletion); both start off. input_rate.html sets V_leak and traces the rate
+     (1 s low-pass), coloured by the state: grey / purple / blue. Click a square to make that neuron spike. -->
+<div class="vmslide">
+<iframe class="vm-sim" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0&amp;dep=static&amp;free&amp;loops&amp;loopq=0.75&amp;pad=0,0,0,78&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=300&amp;link=duel&amp;id=A">
+</iframe>
+<iframe class="vm-io" data-src="widgets/live_sim/input_rate.html?group=duel&amp;param=V&amp;lo=-53&amp;hi=-48&amp;V=-53&amp;yscale=log&amp;traildist=3&amp;trailhold=6&amp;ids=A&amp;statecolors=c4c4ce,7B52B8,3D85C8&amp;ylabel=rate (Hz)">
+</iframe>
+</div>
+<aside class="notes">
+<p>One network. The slider is the external input; the top (-50 mV) puts the resting potential at threshold. Click a square to make one neuron spike.</p>
+<p>Start with no recurrence (grey): the rate is the single neuron’s response to the input. Switch the recurrent excitation on (+, purple): a single spike is enough to set off the loop; every neuron ends up firing at its refractory limit, whatever the input. Switch the negative feedback on (−, blue): the rate follows the input again.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="one-microcircuit-three-response-functions" class="slide level2">
+<h2>One microcircuit, three response functions</h2>
+<!-- widgets/live_sim/microcircuit.html: 60 Poisson units at the in-rate (vertical slider on the in-rate axis) converge
+     on one LIF, with static synapses (left), 48 static + 12 inhibitory at the same rate (middle), or depleting synapses
+     (right, the single pool of the synapse slide). Under each: in rate -> mean synaptic current -> out rate.
+     Fragments (?stages): the static circuit alone, then its three axes, then inhibition, then depletion. -->
+<iframe data-src="widgets/live_sim/microcircuit.html?in=4&amp;q=0.3&amp;fs=1.1&amp;stages" style="width:100%; height:420px; border:0">
+</iframe>
+<p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
+<aside class="notes">
+<p>The same microcircuit three times: 60 presynaptic units firing at the in-rate converge on one neuron (the network’s parameters). Spikes travel along the axons, released quanta (green) jump into the neuron, the neuron’s spikes leave to the right. Below: in rate, the mean synaptic current, out rate.</p>
+<p>Left, static synapses: the current grows with the in-rate and the out-rate overshoots it: in a recurrent network this is the runaway. Middle: a fifth of the inputs are inhibitory (blue) and fire at the same rate, so their current cancels the excitatory one on average: the out-rate follows the input only. Right: depleting synapses: each spike releases less the faster the unit fires, so the current saturates. Both change the response function from in-rate to current.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="a-synapse-can-only-release-what-it-refills" class="slide level2">
+<h2>A synapse can only release what it refills</h2>
+<!-- widgets/live_sim/synapse.html: one synapse with 10 vesicle slots in the centre. A Poisson spike train crosses from
+     the left edge to the pool, released vesicles cross from the pool to the right edge (2 s each); under each lane the
+     rate of what is on it. Legend below: empty -(recovery rate slider, per slot, 0.02-1 /s)-> filled -(presynaptic
+     rate slider, 0-50 Hz)-> releasing. Default recovery rate 1/11.75 s: the SVC with the docked pool clamped.
+     Fragments (?stages): the lanes and the pool; + the legend with its sliders; + the rate traces; + the phase plot;
+     + the derivation with the release-probability slider, and only then the grey stationary lines in the plots. -->
+<iframe data-src="widgets/live_sim/synapse.html?rate=5&amp;slots=20&amp;speed=2&amp;fs=1.25&amp;stages" style="width:100%; height:610px; border:0">
+</iframe>
+<p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
+<aside class="notes">
+<p>One synapse. Each spike (from the left) releases every filled slot with probability 0.2; each empty slot refills at the recovery rate k (default 1/12 s), the vesicle fading in. Released vesicles leave to the right. Under each train, its rate: the events currently on the lane, divided by the 2 s they take to cross.</p>
+<p>Raise the presynaptic rate: the slots empty out, each spike releases less, and the vesicle rate stops growing at the dashed line N · k: at steady state release equals refill, and refill (empty slots × k) can never exceed N · k. Raise k: the plateau moves up. The cap is a property of the synapse, not of the input.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="two-ways-to-stabilize-recurrent-excitation" class="slide level2">
+<h2>Two ways to stabilize recurrent excitation</h2>
+<!-- Left: the two networks with the external input slider (plot=slider) below them. Top: an excitatory-inhibitory network
+     (static synapses; exactly 20 inhibitory neurons, blue, J_I = -g J_E as in Brunel 2000). Bottom: the purely
+     excitatory network with depletion; square size = primed pool, scaled between the min and max of the last 3 s.
+     Middle: inhibitory vs excitatory rate of the EI net; missing resources vs rate of the depletion net.
+     Right: the mean synaptic current of each over the last 10 s. Rates and currents 1 s low-passed, the E / I rates of the
+     phase plots 2.5 s, the missing resources 250 ms (they fluctuate little).
+     Fragments: the networks and their slider first, then the phase plots, then the currents. -->
+<div class="quad">
+<div class="quad-nets">
+<div class="trio-net">
+<div class="duel-cap" style="color:#1f5fa8">
+inhibition
+</div>
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0.3&amp;dep=static&amp;inh=0.2&amp;g=4&amp;seed=5&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=1000&amp;tauei=2500&amp;link=stab&amp;id=EI">
+</iframe>
+</div>
+<div class="trio-net">
+<div class="duel-cap" style="color:#45A86C">
+depletion
+</div>
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0.75&amp;size=primed&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=1000&amp;tauei=2500&amp;taumiss=250&amp;link=stab&amp;id=SVC">
+</iframe>
+</div>
+<div class="quad-top quad-slider">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=slider&amp;param=V&amp;lo=-53&amp;hi=-50&amp;V=-53">
+</iframe>
+</div>
+</div>
+<div class="quad-col fragment">
+<div class="quad-plot">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=xy&amp;x=rateE&amp;y=rateI&amp;trail=20&amp;zoomwin=5&amp;alpha=0.05&amp;lw=0.5&amp;ids=EI&amp;colors=1f5fa8">
+</iframe>
+</div>
+<div class="quad-plot">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=xy&amp;x=rateE&amp;y=missing&amp;trail=20&amp;zoomwin=5&amp;alpha=0.05&amp;lw=0.5&amp;ids=SVC&amp;colors=45A86C">
+</iframe>
+</div>
+<div class="quad-top">
+
+</div>
+</div>
+<div class="quad-col fragment">
+<div class="quad-plot">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=time&amp;y=current&amp;win=10&amp;ids=EI&amp;colors=1f5fa8">
+</iframe>
+</div>
+<div class="quad-plot">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=time&amp;y=current&amp;win=10&amp;ids=SVC&amp;colors=45A86C">
+</iframe>
+</div>
+<div class="quad-top">
+
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Two networks, same external input (the slider on top). Top: 80 excitatory and 20 inhibitory neurons (blue), static synapses, inhibitory synapses 4 times stronger. Bottom: purely excitatory with depletion; each neuron’s square shrinks as its primed pool empties.</p>
+<p>Middle: the inhibitory population tracks the excitatory one (the diagonal: balance), and the depletion network’s missing resources rise with its rate (the negative feedback). Right: the mean recurrent synaptic current over time. Both are insensitive to the input, at different values: ~0 with inhibition (excitation and inhibition cancel: subtractive), a flat ~0.5 mV with depletion (the release rate saturates: a multiplicative cap).</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="explore-the-regimes" class="slide level2">
+<h2>Explore the regimes</h2>
+<!-- live_sim's ?lab layout, the explorer for students (also standalone: widgets/live_sim/live_sim.html?lab&autoplay&N=200&dep=SP).
+     Left: the neuron square (click a square to make that neuron spike), sliders for the external input, the synaptic
+     strength and the single pool's recovery timescale and capacity (live, no reset), speed / +30 s / reset.
+     Right: four analysis panels with a dropdown each (?show): spike raster, population rate, resources, PSD of the
+     population rate, rate vs resources, ISI histogram. -->
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;lab&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=SP&amp;color=spike&amp;win=5&amp;fs=1.2&amp;show=raster,psd,rate,phase" style="width:100%; height:540px; border:0">
+</iframe>
+<aside class="notes">
+<p>The students’ explorer. Walk the external input and the synaptic strength through the regimes and watch the raster, the rate’s spectrum (flat when noise driven, a low-frequency hump when reverberating, a sharp peak with harmonics when bursting), the rate–resources loop and the ISI histogram. Then change the synapse: a longer recovery or a larger capacity.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-full-vesicle-cycle" class="slide level2">
+<h2>The full vesicle cycle</h2>
+<!-- widgets/live_sim/svc.html: one synapse's 104 vesicles cycling fused -> recovery -> loaded -> docked -> primed -> release,
+     every vesicle an object (stochastic version of the SVC, default parameters). Pools on a vertical line, primed at the
+     bottom where the spike train arrives; released vesicles arc up the right into the fused pool. Slider: presynaptic rate. -->
+<iframe data-src="widgets/live_sim/svc.html?rate=5&amp;fs=1.1" style="width:100%; height:610px; border:0">
+</iframe>
+<aside class="notes">
+<p>The full cycle, one vesicle at a time. A spike releases each primed vesicle with probability 0.2; the released vesicle (empty, dashed) returns to the fused membrane. From there, vesicles are recovered at a fixed trickle of one per 3 s (solid outline), loaded (filled again), docked, and primed. The trickle is the bottleneck: it is what caps the vesicle rate, whatever the spike rate.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="main_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="main_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="main_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="main_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="main_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="main_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="main_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="main_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="main_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="main_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: false,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'fade',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <div id="segmented-progress">
+      <div id="segmented-progress-track"></div>
+      <div id="segmented-progress-cover"></div>
+    </div>
+
+    <script>
+    window.addEventListener("load", () => {
+      if (!window.Reveal) return;
+
+      const track  = document.getElementById("segmented-progress-track");
+      const cover  = document.getElementById("segmented-progress-cover");
+
+      const slides = Reveal.getSlides();
+      const totalSlides = slides.length;
+
+      // Find chapter slides explicitly
+      const chapterStarts = [];
+      slides.forEach((slide, i) => {
+        if (slide.classList.contains("chapter")) {
+          chapterStarts.push({ index: i, slide });
+        }
+      });
+
+      if (chapterStarts.length === 0) {
+        console.warn("No .chapter slides found.");
+        return;
+      }
+
+      // Build chapter ranges
+      const chapterRanges = chapterStarts.map((entry, idx) => {
+        const start = entry.index;
+        const end = (idx + 1 < chapterStarts.length)
+          ? chapterStarts[idx + 1].index
+          : totalSlides;
+
+        return {
+          start,
+          end,
+          count: end - start,
+          slide: entry.slide
+        };
+      });
+
+      // Propagate --chapter-color to all slides within each chapter range
+      chapterRanges.forEach((chapter) => {
+        const color = getComputedStyle(chapter.slide).getPropertyValue("--chapter-color").trim();
+        for (let i = chapter.start; i < chapter.end; i++) {
+          slides[i].style.setProperty("--chapter-color", color);
+        }
+      });
+
+      const totalChapterSlides = chapterRanges.reduce((sum, ch) => sum + ch.count, 0);
+      const firstChapterOffset = chapterStarts[0].index / (totalSlides - 1);
+
+      // Build segmented track
+      track.innerHTML = "";
+      chapterRanges.forEach((chapter) => {
+        const seg = document.createElement("div");
+        seg.className = "segmented-progress-segment";
+        seg.style.width = `${100 * chapter.count / totalChapterSlides}%`;
+
+        const computed = getComputedStyle(chapter.slide);
+        const color = computed.getPropertyValue("--chapter-color").trim() || "#999";
+        seg.style.background = color;
+
+        track.appendChild(seg);
+      });
+
+      function updateProgress() {
+        const p = Reveal.getProgress();
+        const adjustedP = Math.max(0, Math.min(1, (p - firstChapterOffset) / (1 - firstChapterOffset)));
+        cover.style.left = `${adjustedP * 100}%`;
+      }
+
+      Reveal.on("ready", updateProgress);
+      Reveal.on("slidechanged", updateProgress);
+      Reveal.on("fragmentshown", updateProgress);
+      Reveal.on("fragmenthidden", updateProgress);
+
+      updateProgress();
+
+      // Inject speaker notes into the auto-generated title slide
+      const titleSlide = Reveal.getSlides()[0];
+      if (titleSlide) {
+        const notes = document.createElement("aside");
+        notes.className = "notes";
+        notes.textContent = "I want to talk about emergence in complex systems. I think you all allready have at least some intuiton for what emergence means, so I will not show you a flock of birds for the millionth time.";
+        titleSlide.appendChild(notes);
+      }
+    });
+    </script>
+    <style>
+    #priority-meter {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 10px;
+      height: 72px;
+      border: 1.5px solid rgba(200, 200, 200, 0.5);
+      border-radius: 5px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.12);
+      z-index: 60;
+      display: none;
+    }
+
+    #priority-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0%;
+      background: #888;
+      transition: height 0.4s ease;
+    }
+    </style>
+    <script>
+    window.addEventListener("load", () => {
+      const meter = document.createElement("div");
+      meter.id = "priority-meter";
+      meter.innerHTML = '<div id="priority-fill"></div>';
+      document.body.appendChild(meter);
+
+      const fill = document.getElementById("priority-fill");
+
+      function parsePriority(raw) {
+        if (!raw) return null;
+        const pct = parseFloat(raw);
+        if (isNaN(pct)) return null;
+        return raw.includes("%") ? raw : pct + "%";
+      }
+
+      function updateMeter() {
+        const slide = Reveal.getCurrentSlide();
+        const raw = slide && (slide.dataset.priority || slide.getAttribute("priority"));
+        const priority = parsePriority(raw);
+        if (priority) {
+          // Read --chapter-color directly from the slide element
+          const color = getComputedStyle(slide).getPropertyValue("--chapter-color").trim() || "#888";
+          fill.style.background = color;
+          fill.style.height = priority;
+          meter.style.display = "block";
+        } else {
+          meter.style.display = "none";
+        }
+      }
+
+      updateMeter();
+      Reveal.on("slidechanged", updateMeter);
+    });
+    </script>
+    <script>
+    // Fragments drive widgets that show in steps (widgets/live_sim ?stages): each widget iframe on the
+    // current slide (in it, or its background-iframe) is told how many fragments are shown. A widget
+    // loads after its slide is shown, so it also asks ("widget:hello") and gets the answer then.
+    window.addEventListener("load", () => {
+      if (!window.Reveal) return;
+      const shown = slide => slide ? slide.querySelectorAll(".fragment.visible").length : 0;
+      const frames = slide => {
+        const bg = Reveal.getSlideBackground(slide);
+        return [...slide.querySelectorAll("iframe"), ...(bg ? bg.querySelectorAll("iframe") : [])];
+      };
+      const send = () => {
+        const slide = Reveal.getCurrentSlide();
+        if (!slide) return;
+        for (const f of frames(slide)) f.contentWindow?.postMessage({ type: "widget:stage", stage: shown(slide) }, "*");
+      };
+      Reveal.on("fragmentshown", send);
+      Reveal.on("fragmenthidden", send);
+      Reveal.on("slidechanged", send);
+      window.addEventListener("message", ev => {
+        if (ev.data?.type !== "widget:hello") return;
+        ev.source?.postMessage({ type: "widget:stage", stage: shown(Reveal.getCurrentSlide()) }, "*");
+      });
+    });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
