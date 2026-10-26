@@ -16,7 +16,7 @@ input[type=range] { position: absolute; -webkit-appearance: none; appearance: no
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff;
   border: 3px solid var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
 input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
-#ctl { position: absolute; right: .6em; top: .4em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .7em; }
+#ctl { position: absolute; right: .6em; top: .4em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .8em; }
 #ctl button { font: inherit; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; cursor: pointer; }
 #ctl button:hover { border-color: var(--ink); color: var(--ink); }
 #ctl span { color: var(--muted); min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -190,7 +190,7 @@ function draw() {
     Object.assign(betaIn.style, { left: sL + "px", top: sy - 0.22 * em + "px", width: sW + "px" });
     ctx.fillStyle = INK; ctx.font = `600 ${0.82 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
     ctx.fillText("release probability", sL + sW / 2, sy - 0.75 * em);
-    ctx.fillStyle = MUTED; ctx.font = `${0.75 * em}px ${FONT}`; ctx.textBaseline = "top";
+    ctx.fillStyle = MUTED; ctx.font = `${0.82 * em}px ${FONT}`; ctx.textBaseline = "top";
     ctx.textAlign = "left"; ctx.fillText(betaIn.min, sL, sy + 0.75 * em);
     ctx.textAlign = "right"; ctx.fillText(betaIn.max, sL + sW, sy + 0.75 * em);
     ctx.textAlign = "center"; ctx.fillStyle = "#aaa"; ctx.font = `italic ${0.85 * em}px ${FONT}`; ctx.fillText("β", sL + sW / 2, sy + 0.7 * em);
@@ -290,11 +290,11 @@ function draw() {
     head(xR, legY);
     ctx.fillStyle = INK; ctx.font = `600 ${0.82 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
     ctx.fillText(title, (xL + xR) / 2, legY - 0.9 * em);
-    ctx.fillStyle = MUTED; ctx.font = `${0.75 * em}px ${FONT}`; ctx.textBaseline = "top";
+    ctx.fillStyle = MUTED; ctx.font = `${0.82 * em}px ${FONT}`; ctx.textBaseline = "top";
     ctx.textAlign = "left"; ctx.fillText(lo, xL, legY + 0.75 * em);
     ctx.textAlign = "right"; ctx.fillText(hi, xR - 0.6 * em, legY + 0.75 * em);
     ctx.textAlign = "center"; ctx.fillStyle = "#aaa"; ctx.font = `italic ${0.85 * em}px ${FONT}`; ctx.fillText(sym, (xL + xR - 0.6 * em) / 2, legY + 0.7 * em);
-    if (sub) { ctx.fillStyle = MUTED; ctx.font = `${0.72 * em}px ${FONT}`; ctx.fillText(sub, (xL + xR - 0.6 * em) / 2, legY + 1.6 * em); }  // a line under the symbol
+    if (sub) { ctx.fillStyle = MUTED; ctx.font = `${0.8 * em}px ${FONT}`; ctx.fillText(sub, (xL + xR - 0.6 * em) / 2, legY + 1.6 * em); }  // a line under the symbol
   };
   // under r: the recovery timescale it amounts to
   arrowSlider(recIn, xs[0] + icR + 0.4 * em, xs[1] - icR - 0.3 * em, "recovery rate", OPT.recLo + " /s", OPT.recHi + " /s", "r", `τ = 1/r = ${(1 / k).toFixed(1)} s`);

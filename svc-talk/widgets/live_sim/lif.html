@@ -17,7 +17,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: transparent;
 #inp::-webkit-slider-thumb { -webkit-appearance: none; width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff;
   border: 3px solid var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
 #inp::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
-#ctl { position: absolute; right: .6em; top: .3em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .7em; }
+#ctl { position: absolute; right: .6em; top: .3em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .8em; }
 #ctl button { font: inherit; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; cursor: pointer; }
 #ctl button:hover { border-color: var(--ink); color: var(--ink); }
 #ctl span { color: var(--muted); min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -72,7 +72,9 @@ let simT = 0, V = P.V_r, refUntil = 0, Iin = 0, psc = 0, rateLP = 0, lastSpike =
 const VM_STEP = 0.5, VM_N = Math.ceil(OPT.win / VM_STEP) + 2, LN_N = Math.ceil(OPT.lane / VM_STEP) + 2;
 const vmT = new Float64Array(VM_N), vmV = new Float32Array(VM_N); let vmHead = 0, vmLen = 0;
 const lnT = new Float64Array(LN_N), lnI = new Float32Array(LN_N), lnP = new Float32Array(LN_N); let lnHead = 0, lnLen = 0;
-const spikes = [], outSpikes = [];
+const spikes = [], outSpikes = [], releases = [];  // releases: [t, n] quanta released by a spike (n > 0), drawn as dots on the postsynaptic stream
+// stochastic quantal release as in the network: Binomial(4, beta P / 4) quanta per spike with the full pool, beta P = 0.8
+const Q_P = 0.2, binom4 = u => { const q = 1 - Q_P, c0 = q ** 4, c1 = c0 + 4 * Q_P * q ** 3, c2 = c1 + 6 * Q_P * Q_P * q * q, c3 = c2 + 4 * Q_P ** 3 * q; return u < c0 ? 0 : u < c1 ? 1 : u < c2 ? 2 : u < c3 ? 3 : 4; };
 let nextSample = 0;
 function step(dt) {
   // the external input glides to the slider (as the deck's other sliders)
@@ -82,7 +84,11 @@ function step(dt) {
   Iin += ((Vleak - P.E_L) + OPT.sigma * Math.sqrt(P.tau_m / (2 * P.tau_s)) * xi - Iin) * (dt / P.tau_s);
   let spk = 0;
   if (simT >= refUntil) V += dt * (Vleak - V) / P.tau_m + OPT.sigma * Math.sqrt(2 * dt / P.tau_m) * xi;
-  if (V > P.V_th && simT >= refUntil) { V = P.V_r; refUntil = simT + P.tau_ref; spk = 1; spikes.push(simT); outSpikes.push(simT); lastSpike = simT; psc += 1; }
+  if (V > P.V_th && simT >= refUntil) {
+    V = P.V_r; refUntil = simT + P.tau_ref; spk = 1; spikes.push(simT); outSpikes.push(simT); lastSpike = simT;
+    const n = binom4(rng()); psc += n; if (n > 0) releases.push([simT, n]);
+  }
+  while (releases.length && releases[0][0] < simT - OPT.lane) releases.shift();
   psc *= 1 - dt / P.tau_s;
   rateLP += (spk * 1000 / dt - rateLP) * (dt / OPT.ratetau);  // the firing rate, low-passed (?ratetau ms)
   simT += dt;
@@ -152,12 +158,12 @@ function ensureSketch(x0, x1, yc, h, em, somaX, endX) {
   const key = `${x0},${x1},${yc},${h},${somaX},${endX}`;
   if (!sketch || sketch.key !== key) { sketch = buildSketch(x0, x1, yc, h, em, somaX, endX); sketch.key = key; }
 }
-function drawSketch(em) {
+function drawSketch(em, boutonA = 1) {  // the boutons appear with the postsynaptic current (step 3)
   ctx.strokeStyle = INK; ctx.lineCap = "round";
   for (const [a, b, c, d, w] of sketch.segs) { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); }
   const [sx, sy, sr] = sketch.soma;
   ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(sx, sy, sr * 1.3, sr, 0, 0, 2 * Math.PI); ctx.fill();
-  ctx.fillStyle = GREEN; for (const [bx, by] of sketch.boutons) { ctx.beginPath(); ctx.arc(bx, by, 0.14 * em, 0, 2 * Math.PI); ctx.fill(); }
+  if (boutonA > 0) { ctx.globalAlpha = boutonA; ctx.fillStyle = GREEN; for (const [bx, by] of sketch.boutons) { ctx.beginPath(); ctx.arc(bx, by, 0.14 * em, 0, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
 }
 
 // a measuring electrode: tapered glass from the tip down-left and a holder (drawn on top), and a faint
@@ -209,7 +215,8 @@ function draw(now) {
   const inL = L + 2.6 * em, inR = somaX - sq / 2 - 0.3 * em, spL = somaX + sq / 2 + 0.3 * em, spR = synX - 0.6 * em, psL = synX + 2.0 * em, psR = R;
   const I0 = (OPT.lo + OPT.hi) / 2 - P.E_L, IAMP = 0.4 * em, Yin = I => streamY - (I - I0) * IAMP;  // the input stream's scale
   const mon = { l: L + 2.3 * em, r: 0.58 * w - 1.2 * em, t: botT + 1.2 * em, b: botB };               // the membrane monitor
-  const spineIn = [inL - 0.5 * em, Yin(OPT.hi - P.E_L)], spinePs = [psL - 0.5 * em, streamY - 0.9 * em], spineVm = [mon.l, mon.t];
+  const QY = 0.4 * em, Yps = q => streamY - Math.min(q, 4.4) * QY;  // the postsynaptic stream: 0.4 em per quantum, 4 q at the spine's top
+  const spineIn = [inL - 0.5 * em, Yin(OPT.hi - P.E_L)], spinePs = [psL - 0.5 * em, Yps(4)], spineVm = [mon.l, mon.t];
   // the electrodes' wires, underneath: dendrite -> input spine; soma -> down the left margin -> monitor spine;
   // a bouton -> the postsynaptic spine
   ensureSketch(L, R, sketchH * 0.55, sketchH, em, somaX, synX);
@@ -219,7 +226,7 @@ function draw(now) {
     if (A2 > 0) { ctx.globalAlpha = A2; drawWire(hS, [[hS[0] - 2 * em, hS[1] + 0.8 * em], [L + 0.15 * em, streamY - 0.4 * em], [L + 0.15 * em, mon.t - 1.0 * em], spineVm]); }
     if (A3 > 0) { ctx.globalAlpha = A3; drawWire(hB, [[hB[0] - 1.0 * em, hB[1] + 1.0 * em], [spinePs[0], spinePs[1] - 1.0 * em], spinePs]); }
     ctx.globalAlpha = 1; }
-  drawSketch(em);
+  drawSketch(em, A3);
   if (A1 === 0) { inp.style.opacity = 0; inp.style.pointerEvents = "none"; return; }  // the sketch alone
   // ---- step 1: the input current, the neuron and its spikes (the synapse and the postsynaptic current are step 3)
   ctx.globalAlpha = A1;
@@ -231,7 +238,7 @@ function draw(now) {
   { const x = inL - 0.5 * em, [vLo, vHi] = [OPT.lo - P.E_L, OPT.hi - P.E_L];
     ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, Yin(vLo)); ctx.lineTo(x, Yin(vHi));
     for (const v of [vLo, vHi]) { ctx.moveTo(x - 0.25 * em, Yin(v)); ctx.lineTo(x, Yin(v)); } ctx.stroke();
-    ctx.fillStyle = MUTED; ctx.font = `${0.62 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillStyle = MUTED; ctx.font = `${0.75 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     ctx.fillText(vLo + " mV", x - 0.35 * em, Yin(vLo)); ctx.fillText(vHi + " mV", x - 0.35 * em, Yin(vHi));
     line(x, Yin(Vleak - P.E_L), x + 0.45 * em, Yin(Vleak - P.E_L), LEAK, 0.14 * em); }
   ctx.strokeStyle = GREEN; ctx.lineWidth = 0.1 * em; ctx.lineJoin = "round"; ctx.beginPath();
@@ -244,10 +251,10 @@ function draw(now) {
   // its spikes, travelling right
   ctx.strokeStyle = PURPLE; ctx.lineWidth = 0.1 * em;
   for (const ts of outSpikes) { const u = (simT - ts) / OPT.lane; if (u > 1) continue; const x = spL + u * (spR - spL); ctx.beginPath(); ctx.moveTo(x, streamY - 0.45 * em); ctx.lineTo(x, streamY + 0.45 * em); ctx.stroke(); }
-  ctx.fillStyle = MUTED; ctx.font = `${0.78 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillStyle = MUTED; ctx.font = `${0.84 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
   const ly = streamY + 0.95 * em;
   ctx.fillText("input current", (inL + inR) / 2, ly); ctx.fillText("spikes", (spL + spR) / 2, ly);
-  ctx.fillStyle = PURPLE; ctx.font = `600 ${0.78 * em}px ${FONT}`; ctx.fillText("LIF neuron", somaX, ly);
+  ctx.fillStyle = PURPLE; ctx.font = `600 ${0.84 * em}px ${FONT}`; ctx.fillText("LIF neuron", somaX, ly);
   drawPipette(pDen[0], pDen[1], em);
   // ---- step 3: the synapse and the postsynaptic current it causes (each spike a quantum, decaying with tau_s)
   ctx.globalAlpha = A3;
@@ -256,14 +263,17 @@ function draw(now) {
   ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(synX, streamY, 0.42 * em, 0, 2 * Math.PI); ctx.fill();
   const Xps = tt => psL + ((simT - tt) / OPT.lane) * (psR - psL);  // newest at the synapse, flowing right
   { const x = spinePs[0];
-    ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, streamY); ctx.lineTo(x, streamY - 0.9 * em);
-    for (const yy of [streamY, streamY - 0.9 * em]) { ctx.moveTo(x - 0.25 * em, yy); ctx.lineTo(x, yy); } ctx.stroke();
-    ctx.fillStyle = MUTED; ctx.font = `${0.62 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    ctx.fillText("0", x - 0.35 * em, streamY); ctx.fillText("1 q", x - 0.35 * em, streamY - 0.9 * em); }
+    ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, streamY); ctx.lineTo(x, Yps(4));
+    for (const yy of [streamY, Yps(4)]) { ctx.moveTo(x - 0.25 * em, yy); ctx.lineTo(x, yy); } ctx.stroke();
+    ctx.fillStyle = MUTED; ctx.font = `${0.75 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText("0", x - 0.35 * em, streamY); ctx.fillText("4 q", x - 0.35 * em, Yps(4)); }
   ctx.strokeStyle = GREEN; ctx.lineWidth = 0.1 * em; ctx.beginPath(); first = true;
-  for (let k = lnLen - 1; k >= 0; k--) { const i = (lnHead - 1 - k + LN_N) % LN_N; if (lnT[i] < simT - OPT.lane) continue; const x = Xps(lnT[i]), y = streamY - Math.min(lnP[i], 1.6) * 0.9 * em; first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+  for (let k = lnLen - 1; k >= 0; k--) { const i = (lnHead - 1 - k + LN_N) % LN_N; if (lnT[i] < simT - OPT.lane) continue; const x = Xps(lnT[i]), y = Yps(lnP[i]); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
   ctx.stroke();
-  ctx.fillStyle = MUTED; ctx.font = `${0.78 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  // the released quanta: one green dot each, stacked at the release, scrolling with the current
+  ctx.fillStyle = GREEN;
+  for (const [t, n] of releases) { const x = Xps(t); if (x > psR) continue; for (let j = 0; j < n; j++) { ctx.beginPath(); ctx.arc(x, streamY - (j + 0.5) * QY, 0.16 * em, 0, 2 * Math.PI); ctx.fill(); } }
+  ctx.fillStyle = MUTED; ctx.font = `${0.84 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillText("synapse", synX, ly); ctx.fillText("postsynaptic current", (psL + psR) / 2, ly);
   drawPipette(pBout[0], pBout[1], em);
   }
@@ -275,9 +285,9 @@ function draw(now) {
     const Y = v => t + (hi - v) / (hi - lo) * ph, X = tt => l + (1 - (simT - tt) / OPT.win) * pw;
     ctx.strokeStyle = MUTED; ctx.fillStyle = MUTED; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(l - 0.5, t); ctx.lineTo(l - 0.5, b); for (const v of [-54, -52, -50, -48]) { ctx.moveTo(l, Y(v)); ctx.lineTo(l - 0.25 * em, Y(v)); } ctx.stroke();
-    ctx.font = `${0.65 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.font = `${0.84 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     for (const v of [-54, -52, -50, -48]) ctx.fillText(String(v).replace("-", "−"), l - 0.35 * em, Y(v));
-    ctx.font = `${0.72 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = INK; ctx.fillText("membrane potential (mV)", l - 2 * em, t - 0.45 * em);
+    ctx.font = `${0.85 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = INK; ctx.fillText("membrane potential (mV)", l - 2 * em, t - 0.45 * em);
     line(l, Y(P.V_th), r, Y(P.V_th), MUTED, 1.5); line(l, Y(Vleak), r, Y(Vleak), LEAK, 1.5);
     const sg = OPT.sigma, ya = Y(Vleak + 3 * sg), yb = Y(Vleak - 3 * sg), g = ctx.createLinearGradient(0, ya, 0, yb);
     for (let k = 0; k <= 12; k++) { const z = -3 + k / 2; g.addColorStop(k / 12, `rgba(142,142,152,${Math.exp(-z * z / 2).toFixed(3)})`); }
@@ -290,7 +300,7 @@ function draw(now) {
     ctx.strokeStyle = SPIKE_TICK; ctx.lineWidth = 1.2; ctx.lineCap = "round"; ctx.beginPath();
     for (const ts of spikes) { ctx.moveTo(X(ts), Y(P.V_th) - 0.15 * em); ctx.lineTo(X(ts), t + 0.05 * em); }
     ctx.stroke(); ctx.lineCap = "butt";
-    ctx.font = `${0.68 * em}px ${FONT}`; ctx.textBaseline = "bottom";
+    ctx.font = `${0.8 * em}px ${FONT}`; ctx.textBaseline = "bottom";
     ctx.fillStyle = MUTED; ctx.textAlign = "left"; halo("threshold", l + 0.2 * em, Y(P.V_th) - 0.1 * em);
     ctx.fillStyle = LEAK; ctx.textAlign = "right"; halo("leak + I_ext", r - stripW - 0.7 * em, Y(Vleak) - 0.1 * em);
   }
@@ -302,13 +312,13 @@ function draw(now) {
     const yMax = Math.max(5, peak * 1.15);
     const X = v => l + (v - OPT.lo) / (OPT.hi - OPT.lo) * pw, Y = v => b - Math.min(v / yMax, 1.02) * ph;
     ctx.strokeStyle = INK; ctx.lineWidth = 0.1 * em; ctx.beginPath(); ctx.moveTo(l, t); ctx.lineTo(l, b); ctx.stroke();
-    ctx.fillStyle = INK; ctx.font = `600 ${0.72 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.lineWidth = 0.07 * em;
+    ctx.fillStyle = INK; ctx.font = `600 ${0.85 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.lineWidth = 0.07 * em;
     const step = yMax > 40 ? 20 : yMax > 16 ? 10 : yMax > 8 ? 5 : 2;
     for (let v = 0; v <= yMax + 1e-9; v += step) { ctx.beginPath(); ctx.moveTo(l - 0.3 * em, Y(v)); ctx.lineTo(l, Y(v)); ctx.stroke(); ctx.fillText(String(v), l - 0.45 * em, Y(v)); }
-    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.font = `${0.72 * em}px ${FONT}`; ctx.fillText("firing rate (Hz)", l - 2 * em, t - 0.45 * em);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.font = `${0.85 * em}px ${FONT}`; ctx.fillText("firing rate (Hz)", l - 2 * em, t - 0.45 * em);
     Object.assign(inp.style, { left: l - 0.65 * em + "px", top: b + 0.5 * em + "px", width: pw + 1.3 * em + "px" });
-    ctx.fillStyle = INK; ctx.font = `600 ${0.78 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("mean input current", (l + r) / 2, b + 1.4 * em);
-    ctx.fillStyle = MUTED; ctx.font = `${0.68 * em}px ${FONT}`; ctx.fillText((OPT.lo - P.E_L) + " mV", l, b + 1.45 * em); ctx.fillText((OPT.hi - P.E_L) + " mV", r, b + 1.45 * em);
+    ctx.fillStyle = INK; ctx.font = `600 ${0.84 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("mean input current", (l + r) / 2, b + 1.4 * em);
+    ctx.fillStyle = MUTED; ctx.font = `${0.8 * em}px ${FONT}`; ctx.fillText((OPT.lo - P.E_L) + " mV", l, b + 1.45 * em); ctx.fillText((OPT.hi - P.E_L) + " mV", r, b + 1.45 * em);
     ctx.strokeStyle = "#b8b8c0"; ctx.lineWidth = 0.14 * em; ctx.beginPath(); CURVE.forEach((q, i) => i ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1]))); ctx.stroke();
     trail.push([now, Vleak, rateLP]); while (trail.length && now - trail[0][0] > 15000) trail.shift();
     ctx.strokeStyle = INK; ctx.lineWidth = 0.16 * em; ctx.lineCap = "round";

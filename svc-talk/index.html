@@ -28,7 +28,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="main_files/libs/revealjs/dist/theme/quarto-f9fb06ba4ff47278dc2b083fe78d7abe.css">
+  <link rel="stylesheet" href="main_files/libs/revealjs/dist/theme/quarto-d31b496834db65fd2fb7c041f973a995.css">
   <link href="main_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="main_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="main_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -177,12 +177,13 @@
 <section id="the-leaky-integrate-and-fire-neuron" class="slide level2">
 <h2>The leaky integrate-and-fire neuron</h2>
 <!-- widgets/live_sim/lif.html: the talk's neuron, alone. Top: a sketch. Middle: the input current reaching the soma
-     (purple, flashes at a spike), its spike train, a synapse, the postsynaptic current. Bottom: the membrane potential
+     (purple, flashes at a spike), its spike train, a synapse with the network's stochastic quantal release (Binomial(4, 0.2)
+     quanta per spike, each a green dot scrolling with the current), the postsynaptic current. Bottom: the membrane potential
      (as the network widget's vm panel) and the firing rate against the external input (the orange slider is the x axis),
      over the analytic rate. Fragments (?stages): the sketch alone; + the input current, the neuron, its spikes and
      the input electrode; + the membrane monitor and its electrode; + the synapse, the postsynaptic current and its
      electrode; + the rate plot with its slider. -->
-<iframe data-src="widgets/live_sim/lif.html?V=-50.8&amp;fs=1.05&amp;stages" style="width:100%; height:520px; border:0">
+<iframe data-src="widgets/live_sim/lif.html?V=-50.8&amp;fs=1.15&amp;stages" style="width:100%; height:520px; border:0">
 </iframe>
 <p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
 <aside class="notes">
@@ -200,9 +201,9 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="section" class="slide level2 rmap-slide">
-<h2></h2>
-<!-- The opener, right after the outline, to motivate the question (no title). The regime map: synchrony (x: mean pairwise correlation of 100 ms spike counts, log scale) against irregularity
+<section id="regimes-of-network-activity" class="slide level2 rmap-slide">
+<h2>Regimes of network activity</h2>
+<!-- The opener, right after the neuron, to motivate the question. The regime map: synchrony (x: mean pairwise correlation of 100 ms spike counts, log scale) against irregularity
      (y: mean CV of the interspike interval). Every tile is the neuron matrix: recordings (solid frame) are played back by
      widgets/spike_play, the model (dashed frame, coloured by regime: noise driven (the sweep's "input driven") blue, reverberating green, the
      avoided states red) runs live in live_sim. Positions follow
@@ -239,7 +240,7 @@ mouse V1
 mouse CA1
 </div>
 </div>
-<div class="tile data" style="left:119px;top:118px">
+<div class="tile data" style="left:119px;top:76px">
 <div class="box">
 <iframe data-src="widgets/spike_play/spike_play.html?theme=slides&amp;data=data/monkeyN_M1.js">
 </iframe>
@@ -257,7 +258,7 @@ monkey M1 (N)
 monkey M1 (L)
 </div>
 </div>
-<div class="tile model r-in fragment" data-fragment-index="1" style="left:66px;top:254px">
+<div class="tile model r-in fragment" data-fragment-index="1" style="left:66px;top:214px">
 <div class="box">
 <iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-50.75&amp;q=0.2&amp;init=init/rmap_noise.js">
 </iframe>
@@ -284,7 +285,7 @@ reverberating
 bursting
 </div>
 </div>
-<div class="tile model r-bad fragment" data-fragment-index="2" style="left:270px;top:390px">
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:270px;top:358px">
 <div class="box">
 <iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=static&amp;init=init/rmap_runaway.js&amp;speed=0.02&amp;tau=1">
 </iframe>
@@ -293,7 +294,7 @@ bursting
 runaway
 </div>
 </div>
-<div class="tile model r-bad fragment" data-fragment-index="2" style="left:150px;top:390px">
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:150px;top:358px">
 <div class="box">
 <iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;V=-48&amp;q=0&amp;dep=static&amp;free&amp;init=init/rmap_clock.js&amp;speed=0.1&amp;tau=12">
 </iframe>
@@ -302,7 +303,7 @@ runaway
 clock-like
 </div>
 </div>
-<div class="tile model r-bad fragment" data-fragment-index="2" style="left:30px;top:390px">
+<div class="tile model r-bad fragment" data-fragment-index="2" style="left:30px;top:358px">
 <div class="box">
 <svg viewbox="0 0 100 100">
 <defs><pattern id="pSilent" width="10" height="10" patternunits="userSpaceOnUse"><rect x="0.8" y="0.8" width="8.4" height="8.4" fill="#c9c9d3"></rect></pattern></defs><rect width="100" height="100" fill="url(#pSilent)"></rect>
@@ -336,8 +337,8 @@ silent
           display:block!important;
       }</style></aside>
 </section>
-<section id="which-regimes-carry-a-signal" class="slide level2">
-<h2>Which regimes carry a signal?</h2>
+<section id="computation-relies-on-stability" class="slide level2">
+<h2>Computation relies on stability</h2>
 <!-- The readout task of the chapter-1 slide, once per model regime of the regime map. Left: the input signal (a
      live_sim with only the task panel fixed at stage 0, ?stage=0 without ?stages, so the slide's fragments don't
      reveal its readout: the figure eight and its moving dot), centred on the
@@ -350,6 +351,8 @@ silent
      −51 / 0.5 mV), chosen so that R² rises down the slide; the map's tiles keep the points chosen for their look.
      Every row starts from a saved state (?init, widgets/live_sim/snapshot.js): network settled and readout trained for
      60 s, so the bars show their values from the first frame. The map's model tiles start settled the same way.
+     The signal's phase follows the wall clock in every frame (?wallsync), so the rows and the signal panel stay in
+     step however they load or lag.
      Fragments: the rows (label, box, arrows) appear one by one, the noise-driven row first, then the others top to
      bottom; the row's frame is not a fragment
      (reveal would not lazy-load it) but follows its box's fragment through the theme's CSS. -->
@@ -357,14 +360,14 @@ silent
 <svg class="cmp-arrows" width="1000" height="556">
 <path class="fragment drive" data-fragment-index="2" d="M195 290 L243.6 89.7"></path><path class="fragment drive head" data-fragment-index="2" d="M246 80 L248.5 90.9 L238.8 88.5 z"></path> <path class="fragment read" data-fragment-index="2" d="M370 80 L396.0 80.0"></path><path class="fragment read head" data-fragment-index="2" d="M406 80 L396.0 85.0 L396.0 75.0 z"></path> <path class="fragment read" data-fragment-index="2" d="M526 80 L552.0 80.0"></path><path class="fragment read head" data-fragment-index="2" d="M562 80 L552.0 85.0 L552.0 75.0 z"></path> <path class="fragment drive" data-fragment-index="3" d="M195 290 L240.1 228.1"></path><path class="fragment drive head" data-fragment-index="3" d="M246 220 L244.2 231.0 L236.1 225.1 z"></path> <path class="fragment read" data-fragment-index="3" d="M370 220 L396.0 220.0"></path><path class="fragment read head" data-fragment-index="3" d="M406 220 L396.0 225.0 L396.0 215.0 z"></path> <path class="fragment read" data-fragment-index="3" d="M526 220 L552.0 220.0"></path><path class="fragment read head" data-fragment-index="3" d="M562 220 L552.0 225.0 L552.0 215.0 z"></path> <path class="fragment drive" data-fragment-index="1" d="M195 290 L240.1 351.9"></path><path class="fragment drive head" data-fragment-index="1" d="M246 360 L236.1 354.9 L244.2 349.0 z"></path> <path class="fragment read" data-fragment-index="1" d="M370 360 L396.0 360.0"></path><path class="fragment read head" data-fragment-index="1" d="M406 360 L396.0 365.0 L396.0 355.0 z"></path> <path class="fragment read" data-fragment-index="1" d="M526 360 L552.0 360.0"></path><path class="fragment read head" data-fragment-index="1" d="M562 360 L552.0 365.0 L552.0 355.0 z"></path> <path class="fragment drive" data-fragment-index="4" d="M195 290 L243.6 490.3"></path><path class="fragment drive head" data-fragment-index="4" d="M246 500 L238.8 491.5 L248.5 489.1 z"></path> <path class="fragment read" data-fragment-index="4" d="M370 500 L396.0 500.0"></path><path class="fragment read head" data-fragment-index="4" d="M406 500 L396.0 505.0 L396.0 495.0 z"></path> <path class="fragment read" data-fragment-index="4" d="M526 500 L552.0 500.0"></path><path class="fragment read head" data-fragment-index="4" d="M562 500 L552.0 505.0 L552.0 495.0 z"></path>
 </svg>
-<div class="cmp-legend" style="left:522px;top:2px">
+<div class="cmp-legend" style="left:502px;top:0">
 <span class="sig">signal</span><span class="dec">decoding</span>
 </div>
 <div class="cmp-signal" style="left:0;top:160px">
 <div class="cap">
 input signal
 </div>
-<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=task&amp;stage=0&amp;nolegend&amp;notitles&amp;nohud&amp;N=10">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;panels=task&amp;stage=0&amp;wallsync&amp;nolegend&amp;notitles&amp;nohud&amp;N=10">
 </iframe>
 </div>
 <div class="cmp-lbl r-bad fragment" data-fragment-index="2" style="left:260px;top:2px">
@@ -373,7 +376,7 @@ runaway
 <div class="cmp-box r-bad fragment" data-fragment-index="2" style="left:255px;top:25px">
 
 </div>
-<iframe class="cmp-row" style="left:260px;top:30px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.5&amp;q=0.75&amp;dep=static&amp;init=init/task_runaway.js">
+<iframe class="cmp-row" style="left:260px;top:30px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;wallsync&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.5&amp;q=0.75&amp;dep=static&amp;init=init/task_runaway.js">
 </iframe>
 <div class="cmp-lbl r-bad fragment" data-fragment-index="3" style="left:260px;top:142px">
 bursting
@@ -381,7 +384,7 @@ bursting
 <div class="cmp-box r-bad fragment" data-fragment-index="3" style="left:255px;top:165px">
 
 </div>
-<iframe class="cmp-row" style="left:260px;top:170px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-52.3&amp;q=1.15&amp;init=init/task_burst.js">
+<iframe class="cmp-row" style="left:260px;top:170px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;wallsync&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-52.3&amp;q=1.15&amp;init=init/task_burst.js">
 </iframe>
 <div class="cmp-lbl r-in fragment" data-fragment-index="1" style="left:260px;top:282px">
 noise driven
@@ -389,7 +392,7 @@ noise driven
 <div class="cmp-box r-in fragment" data-fragment-index="1" style="left:255px;top:305px">
 
 </div>
-<iframe class="cmp-row" style="left:260px;top:310px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.9&amp;q=0.2&amp;init=init/task_noise.js">
+<iframe class="cmp-row" style="left:260px;top:310px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;wallsync&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51.9&amp;q=0.2&amp;init=init/task_noise.js">
 </iframe>
 <div class="cmp-lbl r-rev fragment" data-fragment-index="4" style="left:260px;top:422px">
 reverberating
@@ -397,7 +400,7 @@ reverberating
 <div class="cmp-box r-rev fragment" data-fragment-index="4" style="left:255px;top:445px">
 
 </div>
-<iframe class="cmp-row" style="left:260px;top:450px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51&amp;q=0.5&amp;init=init/task_reverb.js">
+<iframe class="cmp-row" style="left:260px;top:450px" data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;row&amp;gap=56&amp;dots=0.4&amp;panels=grid,weights,task&amp;wallsync&amp;color=spike&amp;notitles&amp;nohud&amp;N=100&amp;accent=6E7F3E&amp;V=-51&amp;q=0.5&amp;init=init/task_reverb.js">
 </iframe>
 </div>
 <aside class="notes">
@@ -415,8 +418,8 @@ reverberating
           display:block!important;
       }</style></aside>
 </section>
-<section id="recurrent-excitation-runs-away" class="slide level2">
-<h2>Recurrent excitation runs away</h2>
+<section id="recurrent-excitation-requires-a-negative-feedback" class="slide level2">
+<h2>Recurrent excitation requires a negative feedback</h2>
 <!-- One purely excitatory network (N = 100, random connections). The slider is the external input (V_leak,
      -53 to -48 mV; threshold is -50, so the top of the range drives the neurons regularly; ?free lets V leave the map). The widget's loops (?loops) toggle the recurrent coupling (+: q 0 / 0.75 mV) and the negative
      feedback (−: static synapses / depletion); both start off. input_rate.html sets V_leak and traces the rate
@@ -442,13 +445,13 @@ reverberating
           display:block!important;
       }</style></aside>
 </section>
-<section id="one-microcircuit-three-response-functions" class="slide level2">
-<h2>One microcircuit, three response functions</h2>
+<section id="why-it-blows-up-and-how-to-prevent-it" class="slide level2">
+<h2>Why it blows up, and how to prevent it</h2>
 <!-- widgets/live_sim/microcircuit.html: 60 Poisson units at the in-rate (vertical slider on the in-rate axis) converge
      on one LIF, with static synapses (left), 48 static + 12 inhibitory at the same rate (middle), or depleting synapses
      (right, the single pool of the synapse slide). Under each: in rate -> mean synaptic current -> out rate.
      Fragments (?stages): the static circuit alone, then its three axes, then inhibition, then depletion. -->
-<iframe data-src="widgets/live_sim/microcircuit.html?in=4&amp;q=0.3&amp;fs=1.1&amp;stages" style="width:100%; height:420px; border:0">
+<iframe data-src="widgets/live_sim/microcircuit.html?in=1,0,0&amp;q=0.3&amp;fs=1.1&amp;stages" style="width:100%; height:420px; border:0">
 </iframe>
 <p><span class="fragment"></span><span class="fragment"></span><span class="fragment"></span></p>
 <aside class="notes">
@@ -466,8 +469,8 @@ reverberating
           display:block!important;
       }</style></aside>
 </section>
-<section id="a-synapse-can-only-release-what-it-refills" class="slide level2">
-<h2>A synapse can only release what it refills</h2>
+<section id="response-function-with-synaptic-depression" class="slide level2">
+<h2>Response function with synaptic depression</h2>
 <!-- widgets/live_sim/synapse.html: one synapse with 10 vesicle slots in the centre. A Poisson spike train crosses from
      the left edge to the pool, released vesicles cross from the pool to the right edge (2 s each); under each lane the
      rate of what is on it. Legend below: empty -(recovery rate slider, per slot, 0.02-1 /s)-> filled -(presynaptic
@@ -492,17 +495,18 @@ reverberating
           display:block!important;
       }</style></aside>
 </section>
-<section id="two-ways-to-stabilize-recurrent-excitation" class="slide level2">
-<h2>Two ways to stabilize recurrent excitation</h2>
+<section id="network-effect-of-the-negative-feedback" class="slide level2">
+<h2>Network effect of the negative feedback</h2>
 <!-- Left: the two networks with the external input slider (plot=slider) below them. Top: an excitatory-inhibitory network
      (static synapses; exactly 20 inhibitory neurons, blue, J_I = -g J_E as in Brunel 2000). Bottom: the purely
-     excitatory network with depletion; square size = primed pool, scaled between the min and max of the last 3 s.
+     excitatory network with depletion; the green dots in a square are the neuron's primed vesicles (?pool=dots).
      Middle: inhibitory vs excitatory rate of the EI net; missing resources vs rate of the depletion net.
      Right: the mean synaptic current of each over the last 10 s. Rates and currents 1 s low-passed, the E / I rates of the
      phase plots 2.5 s, the missing resources 250 ms (they fluctuate little).
+     A grid of two rows (inhibition, depletion) x network | phase plot | current, the slider in a third row under
+     the networks, so the plots line up with the networks by construction.
      Fragments: the networks and their slider first, then the phase plots, then the currents. -->
 <div class="quad">
-<div class="quad-nets">
 <div class="trio-net">
 <div class="duel-cap" style="color:#1f5fa8">
 inhibition
@@ -510,43 +514,32 @@ inhibition
 <iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0.3&amp;dep=static&amp;inh=0.2&amp;g=4&amp;seed=5&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=1000&amp;tauei=2500&amp;link=stab&amp;id=EI">
 </iframe>
 </div>
+<div class="quad-plot fragment" data-fragment-index="1">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=xy&amp;x=rateE&amp;y=rateI&amp;trail=20&amp;zoomwin=5&amp;alpha=0.05&amp;lw=0.5&amp;ids=EI&amp;colors=1f5fa8">
+</iframe>
+</div>
+<div class="quad-plot fragment" data-fragment-index="2">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=time&amp;y=current&amp;win=10&amp;ids=EI&amp;colors=1f5fa8">
+</iframe>
+</div>
 <div class="trio-net">
 <div class="duel-cap" style="color:#45A86C">
 depletion
 </div>
-<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0.75&amp;size=primed&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=1000&amp;tauei=2500&amp;taumiss=250&amp;link=stab&amp;id=SVC">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;N=100&amp;V=-53&amp;q=0.75&amp;pool=dots&amp;panels=grid&amp;color=spike&amp;notitles&amp;nohud&amp;ratetau=1000&amp;tauei=2500&amp;taumiss=250&amp;link=stab&amp;id=SVC">
 </iframe>
 </div>
-<div class="quad-top quad-slider">
-<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=slider&amp;param=V&amp;lo=-53&amp;hi=-50&amp;V=-53">
-</iframe>
-</div>
-</div>
-<div class="quad-col fragment">
-<div class="quad-plot">
-<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=xy&amp;x=rateE&amp;y=rateI&amp;trail=20&amp;zoomwin=5&amp;alpha=0.05&amp;lw=0.5&amp;ids=EI&amp;colors=1f5fa8">
-</iframe>
-</div>
-<div class="quad-plot">
+<div class="quad-plot fragment" data-fragment-index="1">
 <iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=xy&amp;x=rateE&amp;y=missing&amp;trail=20&amp;zoomwin=5&amp;alpha=0.05&amp;lw=0.5&amp;ids=SVC&amp;colors=45A86C">
 </iframe>
 </div>
-<div class="quad-top">
-
-</div>
-</div>
-<div class="quad-col fragment">
-<div class="quad-plot">
-<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=time&amp;y=current&amp;win=10&amp;ids=EI&amp;colors=1f5fa8">
-</iframe>
-</div>
-<div class="quad-plot">
+<div class="quad-plot fragment" data-fragment-index="2">
 <iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=time&amp;y=current&amp;win=10&amp;ids=SVC&amp;colors=45A86C">
 </iframe>
 </div>
-<div class="quad-top">
-
-</div>
+<div class="quad-slider">
+<iframe data-src="widgets/live_sim/input_rate.html?group=stab&amp;plot=slider&amp;param=V&amp;lo=-53&amp;hi=-50&amp;V=-53">
+</iframe>
 </div>
 </div>
 <aside class="notes">
@@ -564,14 +557,35 @@ depletion
           display:block!important;
       }</style></aside>
 </section>
+<section id="breakout" class="slide level2 progress-end">
+<h2>Breakout</h2>
+<ul>
+<li>Do you “understand” how synaptic depression stabilizes recurrent excitation?</li>
+<li>On the next slide, explore the different regimes of network dynamics</li>
+<li>On the slide after that, explore the difference between the single pool model and the vesicle cycle model</li>
+</ul>
+<aside class="notes">
+<p>Hand over to the students: the explorer, then the comparison of the two synapse models.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="explore-the-regimes" class="slide level2">
 <h2>Explore the regimes</h2>
 <!-- live_sim's ?lab layout, the explorer for students (also standalone: widgets/live_sim/live_sim.html?lab&autoplay&N=200&dep=SP).
-     Left: the neuron square (click a square to make that neuron spike), sliders for the external input, the synaptic
-     strength and the single pool's recovery timescale and capacity (live, no reset), speed / +30 s / reset.
+     Left: the neuron square (click a square to make that neuron spike), sliders for the external input, the quantal
+     EPSP and the single pool's recovery timescale and capacity (live, no reset), speed / +30 s / reset.
      Right: four analysis panels with a dropdown each (?show): spike raster, population rate, resources, PSD of the
      population rate, rate vs resources, ISI histogram. -->
-<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;lab&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=SP&amp;color=spike&amp;win=5&amp;fs=1.2&amp;show=raster,psd,rate,phase" style="width:100%; height:540px; border:0">
+<iframe data-src="widgets/live_sim/live_sim.html?clean&amp;theme=slides&amp;autoplay&amp;lab&amp;N=100&amp;V=-51.5&amp;q=0.75&amp;dep=SP&amp;color=spike&amp;win=5&amp;fs=1.35&amp;show=raster,psd,rate,phase" style="width:100%; height:540px; border:0">
 </iframe>
 <aside class="notes">
 <p>The students’ explorer. Walk the external input and the synaptic strength through the regimes and watch the raster, the rate’s spectrum (flat when noise driven, a low-frequency hump when reverberating, a sharp peak with harmonics when bursting), the rate–resources loop and the ISI histogram. Then change the synapse: a longer recovery or a larger capacity.</p>
@@ -591,8 +605,11 @@ depletion
 <h2>The full vesicle cycle</h2>
 <!-- widgets/live_sim/svc.html: one synapse's 104 vesicles cycling fused -> recovery -> loaded -> docked -> primed -> release,
      every vesicle an object (stochastic version of the SVC, default parameters). Pools on a vertical line, primed at the
-     bottom where the spike train arrives; released vesicles arc up the right into the fused pool. Slider: presynaptic rate. -->
-<iframe data-src="widgets/live_sim/svc.html?rate=5&amp;fs=1.1" style="width:100%; height:610px; border:0">
+     bottom where the spike train arrives; released vesicles arc up the right into the fused pool. Slider: presynaptic rate.
+     ?compare: the single pool model beside it, driven by the same spikes (refill r = k_rec / C_P, so both cap at the
+     same vesicle rate); the plot shows both response curves and live points; the β and recovery-rate sliders under
+     the plot set both models at once. -->
+<iframe data-src="widgets/live_sim/svc.html?rate=5&amp;fs=1.2&amp;compare" style="width:100%; height:610px; border:0">
 </iframe>
 <aside class="notes">
 <p>The full cycle, one vesicle at a time. A spike releases each primed vesicle with probability 0.2; the released vesicle (empty, dashed) returns to the fused membrane. From there, vesicles are recovered at a fixed trickle of one per 3 s (solid outline), loaded (filled again), docked, and primed. The trickle is the bottleneck: it is what caps the vesicle rate, whatever the spike rate.</p>
@@ -837,7 +854,10 @@ depletion
       const cover  = document.getElementById("segmented-progress-cover");
 
       const slides = Reveal.getSlides();
-      const totalSlides = slides.length;
+      // the bar runs from the first chapter slide to the slide marked .progress-end (the breakout), if there is one:
+      // the slides after it (the students' explorers) don't count
+      const endMarked = slides.findIndex(s => s.classList.contains("progress-end"));
+      const totalSlides = endMarked >= 0 ? endMarked + 1 : slides.length;
 
       // Find chapter slides explicitly
       const chapterStarts = [];
@@ -867,16 +887,18 @@ depletion
         };
       });
 
-      // Propagate --chapter-color to all slides within each chapter range
-      chapterRanges.forEach((chapter) => {
+      // Propagate --chapter-color to all slides within each chapter range (the last one to the very end: the
+      // slides after .progress-end still belong to it, they just don't count for the bar)
+      chapterRanges.forEach((chapter, idx) => {
         const color = getComputedStyle(chapter.slide).getPropertyValue("--chapter-color").trim();
-        for (let i = chapter.start; i < chapter.end; i++) {
+        const end = idx === chapterRanges.length - 1 ? slides.length : chapter.end;
+        for (let i = chapter.start; i < end; i++) {
           slides[i].style.setProperty("--chapter-color", color);
         }
       });
 
       const totalChapterSlides = chapterRanges.reduce((sum, ch) => sum + ch.count, 0);
-      const firstChapterOffset = chapterStarts[0].index / (totalSlides - 1);
+      const firstIndex = chapterStarts[0].index, lastIndex = totalSlides - 1;
 
       // Build segmented track
       track.innerHTML = "";
@@ -893,8 +915,11 @@ depletion
       });
 
       function updateProgress() {
-        const p = Reveal.getProgress();
-        const adjustedP = Math.max(0, Math.min(1, (p - firstChapterOffset) / (1 - firstChapterOffset)));
+        // the current slide's share of the way from the first chapter slide to the end slide, plus its fragments' share of one step
+        const i = slides.indexOf(Reveal.getCurrentSlide()), cur = Reveal.getCurrentSlide();
+        const frags = cur ? cur.querySelectorAll(".fragment").length : 0, shown = cur ? cur.querySelectorAll(".fragment.visible").length : 0;
+        const pos = i + (frags ? shown / (frags + 1) : 0);
+        const adjustedP = Math.max(0, Math.min(1, (pos - firstIndex) / (lastIndex - firstIndex)));
         cover.style.left = `${adjustedP * 100}%`;
       }
 
@@ -905,14 +930,6 @@ depletion
 
       updateProgress();
 
-      // Inject speaker notes into the auto-generated title slide
-      const titleSlide = Reveal.getSlides()[0];
-      if (titleSlide) {
-        const notes = document.createElement("aside");
-        notes.className = "notes";
-        notes.textContent = "I want to talk about emergence in complex systems. I think you all allready have at least some intuiton for what emergence means, so I will not show you a flock of birds for the millionth time.";
-        titleSlide.appendChild(notes);
-      }
     });
     </script>
     <style>

@@ -17,7 +17,7 @@ input[type=range] { position: absolute; -webkit-appearance: none; appearance: no
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff;
   border: 3px solid var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
 input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
-#ctl { position: absolute; right: .6em; top: .3em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .7em; }
+#ctl { position: absolute; right: .6em; top: .3em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .8em; }
 #ctl button { font: inherit; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; cursor: pointer; }
 #ctl button:hover { border-color: var(--ink); color: var(--ink); }
 #ctl span { color: var(--muted); min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -41,7 +41,8 @@ input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius
 const Q = new URLSearchParams(location.search);
 const num = (k, d) => { const v = parseFloat(Q.get(k)); return Number.isFinite(v) ? v : d; };
 const OPT = {
-  in: num("in", 4), K: Math.round(num("K", 60)), KI: Math.round(num("KI", 12)), g: num("g", 4), q: num("q", 0.75), V: num("V", -51.6),
+  in: (Q.get("in") || "4").split(",").map(Number).filter(Number.isFinite),  // start in-rate (Hz): one for all, or one per column
+  K: Math.round(num("K", 60)), KI: Math.round(num("KI", 12)), g: num("g", 4), q: num("q", 0.75), V: num("V", -51.6),
   C: Math.round(num("C", 4)), k: num("k", 1 / 11.75), beta: num("beta", 0.2), speed: num("speed", 1), fs: num("fs", 1), seed: num("seed", 1),
   qdep: num("qdep", 0.75),  // the depleting synapses' quantal size (the network's), the static ones use q
   inmax: (Q.get("inmax") || "5,15,8").split(",").map(Number),  // the in-rate range per column: the fixed point at ~70 % of it
@@ -82,7 +83,7 @@ class Circuit {
     this.cur = 0; this.cvar = 0; this.out = 0;  // low-passed synaptic current and its variance (2 s), output rate (5 s)
     this.nextIn = new Float64Array(this.K).fill(Infinity);
     this.spikesIn = []; this.quanta = []; this.spikesOut = [];  // animations for the drawn units
-    this.setRate(OPT.in);
+    this.setRate(OPT.in[ALL.indexOf(kind)] ?? OPT.in[0]);
   }
   setRate(r) { this.rate = r; for (let j = 0; j < this.K; j++) this.nextIn[j] = r > 0 ? this.t + LANE_IN - Math.log(1 - this.rng()) * 1000 / r : Infinity; }
   step(dt) {  // one 0.1 ms step
@@ -142,7 +143,7 @@ const circuits = OPT.cols.map(k => new Circuit(k, OPT.seed + ALL.indexOf(k)));
 const TITLES = OPT.cols.map(k => TITLE_OF[k]), INMAX = OPT.cols.map(k => OPT.inmax[ALL.indexOf(k)]);
 const SINGLE = circuits.length === 1;  // one circuit: no title, a tighter stack, a 0.6-width column
 const sliders = circuits.map((c, i) => {
-  const el = $("in" + i); el.max = INMAX[i]; el.step = INMAX[i] > 8 ? 0.25 : 0.1; el.value = Math.min(OPT.in, INMAX[i]);
+  const el = $("in" + i); el.max = INMAX[i]; el.step = INMAX[i] > 8 ? 0.25 : 0.1; el.value = Math.min(OPT.in[ALL.indexOf(OPT.cols[i])] ?? OPT.in[0], INMAX[i]);
   c.setRate(+el.value);
   el.addEventListener("input", () => c.setRate(+el.value)); el.addEventListener("change", () => el.blur()); return el;
 });
@@ -225,7 +226,7 @@ function draw() {
     ctx.globalAlpha = stageA[i];
     // ---- title (none for a single circuit: the slide has its own)
     if (!SINGLE) {
-      ctx.fillStyle = TITLE_COLOR[c.kind]; ctx.font = `600 ${0.9 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = TITLE_COLOR[c.kind]; ctx.font = `600 ${1.1 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
       TITLES[i].split("\n").forEach((l, li) => ctx.fillText(l, x0 + colW / 2, 1.5 * em + li * 1.05 * em));
     }
     // ---- the circuit, compact: three units (and dots for the rest) -> synapses -> the neuron
@@ -287,14 +288,14 @@ function draw() {
     const ax = [(ux + sq / 2 + sx - 0.6 * em) / 2, jx + 0.4 * em, (nx + sq / 2 + outEnd) / 2], labels = ["in rate", "current", "out rate"];
     ax.forEach((x, k) => {
       line(x, ay1, x, ay0, INK, 0.08 * em);
-      ctx.fillStyle = INK; ctx.font = `${0.8 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = INK; ctx.font = `${0.88 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText(labels[k], x, ay1 + 0.35 * em);
     });
     const rMax = INMAX[i], sym = c.kind === "inh";  // the inhibition column's current axis is centred on 0
     const rIn = c.rate, cur = sym ? c.cur : Math.max(0, c.cur), sd = Math.sqrt(Math.max(0, c.cvar)), out = c.out;
     const Yr = v => ay1 - Math.min(v / rMax, 1) * aH;
     const Yc = sym ? v => (ay0 + ay1) / 2 - Math.max(-1, Math.min(v / OPT.curMax, 1)) * aH / 2 : v => ay1 - Math.min(v / OPT.curMax, 1) * aH;
-    ctx.fillStyle = INK; ctx.font = `600 ${0.82 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillStyle = INK; ctx.font = `600 ${0.9 * em}px ${FONT}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     ctx.fillText("0 Hz", ax[0] - 0.9 * em, ay1); ctx.fillText(rMax + " Hz", ax[0] - 0.9 * em, ay0);
     // the feet: a tick where y = 0 on each axis
     [[ax[0], ay1], [ax[1], Yc(0)], [ax[2], ay1]].forEach(([x, y]) => line(x - 0.6 * em, y, x + 0.6 * em, y, INK, 0.1 * em));
@@ -316,13 +317,11 @@ function draw() {
     // the gain, on the in -> out line: at a quarter of the way, clear of the current axis, with a white backing
     const d = out - rIn, mx = ax[0] + 0.3 * (ax[2] - ax[0]), my = Yr(rIn) + 0.3 * (Yr(out) - Yr(rIn));  // the true gain, even when the point is pinned at the top
     const txt = (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(1) + " Hz";
-    ctx.font = `600 ${0.78 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.font = `600 ${0.85 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
     const tw = ctx.measureText(txt).width;
     ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillRect(mx - tw / 2 - 0.2 * em, my - 1.35 * em, tw + 0.4 * em, 0.95 * em);
     ctx.fillStyle = INK; ctx.fillText(txt, mx, my - 0.45 * em);
     }
-    ctx.globalAlpha = stageA[i];
-    if (!SINGLE && i < circuits.length - 1) line(x0 + colW, 0.6 * em, x0 + colW, h - 0.6 * em, LINE, 1);
     ctx.globalAlpha = 1;
   });
 }

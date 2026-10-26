@@ -16,7 +16,7 @@ input[type=range] { position: absolute; -webkit-appearance: none; appearance: no
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff;
   border: 3px solid var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
 input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
-#ctl { position: absolute; right: .6em; top: .4em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .7em; }
+#ctl { position: absolute; right: .6em; top: .4em; display: flex; gap: .3em; align-items: center; z-index: 3; font-size: .8em; }
 #ctl button { font: inherit; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; cursor: pointer; }
 #ctl button:hover { border-color: var(--ink); color: var(--ink); }
 #ctl span { color: var(--muted); min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -25,6 +25,8 @@ input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius
 <body>
 <canvas id="cv"></canvas>
 <input type="range" id="rate" min="0" max="15" step="0.5" title="presynaptic rate">
+<input type="range" id="beta" min="0.05" max="1" step="0.05" title="release probability, both models" hidden>
+<input type="range" id="krec" step="0.01" title="recovery rate, both models" hidden>
 <div id="ctl"><button id="slower" title="simulation speed −0.5">◀</button><span id="spd"></span><button id="faster" title="simulation speed +0.5">▶</button><button id="stat" title="set the pools to the stationary state of the current presynaptic rate">stationary</button></div>
 <script>
 "use strict";
@@ -39,10 +41,15 @@ input[type=range]::-moz-range-thumb { width: 1.3em; height: 1.3em; border-radius
 // Released vesicles arc up the right-hand side into the fused pool (no slots there). A vesicle's state is
 // its colour: dark green when fused (just released), brighter at every step to the primed pool.
 // Slots are grey discs, covered by the vesicle that fills them.
+// ?compare: the single pool model beside the cycle, driven by the same spike train: C_P slots, release beta per
+// spike, each empty slot refilled at r = k_rec / C_P (k_rec = 1 / tau_recover, so both models cap at the same
+// vesicle rate k_rec). The plot shows both response curves and both live points; two sliders, the release
+// probability and the recovery rate, set both models at once.
 // URL: ?rate=5&speed=1&fs=1&seed=1&lane=6 and any of tau_recover, tau_load, tau_dock, tau_prime (ms), C_R, C_L, C_D, C_P, C_F, beta
 const Q = new URLSearchParams(location.search);
 const num = (k, d) => { const v = parseFloat(Q.get(k)); return Number.isFinite(v) ? v : d; };
-const OPT = { rate: num("rate", 5), speed: num("speed", 1), fs: num("fs", 1), seed: num("seed", 1), lane: num("lane", 6) * 1000 };
+const OPT = { rate: num("rate", 5), speed: num("speed", 1), fs: num("fs", 1), seed: num("seed", 1), lane: num("lane", Q.has("compare") ? 3 : 6) * 1000,  // ?compare: a faster axon
+  compare: Q.has("compare"), krecLo: num("kreclo", 0.05), krecHi: num("krechi", 2) };  // the recovery-rate slider's range (/s, log)
 const P0 = {  // default_params.py
   tau_recover: num("tau_recover", 3000), tau_load: num("tau_load", 500), tau_dock: num("tau_dock", 1000), tau_prime: num("tau_prime", 100),
   C_R: num("C_R", 40), C_L: num("C_L", 40), C_D: num("C_D", 20), C_P: num("C_P", 4), C_F: num("C_F", 104), beta: num("beta", 0.2),
@@ -52,7 +59,7 @@ const framed = window.parent !== window;
 const $ = id => document.getElementById(id);
 const cv = $("cv"), ctx = cv.getContext("2d"), rateIn = $("rate");
 const FONT = getComputedStyle(document.documentElement).getPropertyValue("--font").trim();
-const INK = "#222", MUTED = "#666", LINE = "#d6d6d6";
+const INK = "#222", MUTED = "#666", LINE = "#d6d6d6", SP_COLOR = "#7B52B8";  // the single pool's trace: purple
 // vesicle state by colour, dark (fused, i.e. just released) to bright (primed); the traces use the released colour
 const POOL_COLOR = ["#1d5a35", "#276b40", "#317d4c", "#3b925c", "#45A86C"], RELEASED = POOL_COLOR[0];  // primed = the single pool's green
 
@@ -98,6 +105,22 @@ function place(v, pi) {  // put vesicle v into pool pi at a free position; retur
 }
 const count = pi => pools[pi].count;
 
+// ?compare: the single pool, C_P slots at the primed pool's row, to the right of the cycle
+const sp = { cap: P0.C_P, pos: [], count: 0, out: [] };  // out: released vesicles flying off to the right [{ t0, x, y }]
+{
+  const r0 = makeRng(OPT.seed * 11 + 5), minD = 1.5 * 0.74 / Math.sqrt(sp.cap);
+  for (let tries = 0; sp.pos.length < sp.cap && tries < 2e5; tries++) {
+    const a = 2 * Math.PI * r0(), rr = 0.74 * Math.sqrt(r0()), x = rr * Math.cos(a), y = rr * Math.sin(a);
+    if (sp.pos.every(q => Math.hypot(q.x - x, q.y - y) > minD)) sp.pos.push({ x, y, full: true, fadeT0: null });
+  }
+  sp.count = sp.cap;
+}
+const kRec = () => 1000 / P0.tau_recover;   // the cycle's recovery rate (/s): its vesicle-rate cap
+const spRate = () => kRec() / P0.C_P;       // the single pool's refill rate per empty slot: the same cap C_P r
+const SP_DLY = 0, SP_OUT = 1500;            // ms: the single pool gets the same spikes at the same time; a released vesicle leaves in SP_OUT
+let CIRC = null;                             // ?compare: the pools' circle { cx, cy, Rc }
+const releasedSP = [];
+
 rateIn.value = OPT.rate;
 const rate = () => +rateIn.value;
 let simT = 0;
@@ -128,7 +151,17 @@ function step(dt) {
     s.done = true;
     for (const v of ves) if (v.pool === P && idle(v) && rng() < P0.beta) { move(v, F, ARC, true); released.push(simT); }
   }
-  while (spikes.length && spikes[0].tHit < simT - 200) spikes.shift();
+  if (OPT.compare) for (const s of spikes) if (!s.done2 && s.tHit + SP_DLY <= simT) {  // the same spike reaches the single pool
+    s.done2 = true;
+    for (const q of sp.pos) if (q.full && rng() < P0.beta) { q.full = false; sp.count--; releasedSP.push(simT); sp.out.push({ t0: simT, q }); }
+  }
+  if (OPT.compare) {
+    const pRefill = 1 - Math.exp(-spRate() * dt / 1000);
+    for (const q of sp.pos) if (!q.full && rng() < pRefill) { q.full = true; q.fadeT0 = simT; sp.count++; }
+    while (sp.out.length && sp.out[0].t0 < simT - SP_OUT) sp.out.shift();
+    while (releasedSP.length && releasedSP[0] < simT - VWIN) releasedSP.shift();
+  }
+  while (spikes.length && spikes[0].tHit < simT - SP_DLY - 200) spikes.shift();
   // fused -> recovery: the trickle
   if (count(F) > 0 && count(R) < P0.C_R && rng() < dt / P0.tau_recover) {
     const cand = ves.filter(v => v.pool === F && idle(v));
@@ -148,7 +181,7 @@ function step(dt) {
   while (released.length && released[0] < simT - VWIN) released.shift();
   if (simT >= nextSample) {
     nextSample = simT + 50;
-    traceS.push([simT, spikeRate()]); traceV.push([simT, vesRate()]);
+    traceS.push([simT, spikeRate()]); traceV.push([simT, vesRate(), releasedSP.length / (VWIN / 1000)]);  // [t, cycle, single pool]
     while (traceS.length && traceS[0][0] < simT - WIN) traceS.shift();
     while (traceV.length && traceV[0][0] < simT - WIN) traceV.shift();
   }
@@ -157,10 +190,10 @@ function step(dt) {
 // the stationary state of the continuous SVC at rate f (the same equations as the stochastic steps, with the
 // release as its mean beta P f), iterated to convergence, rounded to vesicles; fused takes the remainder
 function stationary(f) {
-  const p = P0, h = 1, dep = p.beta * f / 1000 * h, kRec = h / p.tau_recover, kLoad = 4 * h / p.tau_load, kDock = 4 * h / p.tau_dock, kPrime = 2 * h / p.tau_prime;
+  const p = P0, h = 40, dep = p.beta * f / 1000 * h, kRec = h / p.tau_recover, kLoad = 4 * h / p.tau_load, kDock = 4 * h / p.tau_dock, kPrime = 2 * h / p.tau_prime;
   let Rv = p.C_R, Lv = p.C_L, Dv = p.C_D, Pv = p.C_P, Fv = Math.max(0, p.C_F - (Rv + Lv + Dv + Pv)), prev = [0, 0, 0, 0];
-  for (let it = 0; it < 2e7; it++) {
-    if (it % 1000 === 0) { const d = Math.abs(Rv - prev[0]) + Math.abs(Lv - prev[1]) + Math.abs(Dv - prev[2]) + Math.abs(Pv - prev[3]); if (it && d < 1e-9) break; prev = [Rv, Lv, Dv, Pv]; }
+  for (let it = 0; it < 1e5; it++) {  // 40 ms steps (stable: the fastest rate is 2 h / tau_prime = 0.8), at most 4000 s
+    if (it % 50 === 0) { const d = Math.abs(Rv - prev[0]) + Math.abs(Lv - prev[1]) + Math.abs(Dv - prev[2]) + Math.abs(Pv - prev[3]); if (it && d < 1e-6) break; prev = [Rv, Lv, Dv, Pv]; }
     const f2r = kRec / (1 + Math.exp(-100 * Fv)) / (1 + Math.exp(-100 * (p.C_R - Rv)));
     const r2l = kLoad * (Rv / p.C_R) * (1 - Lv / p.C_L), l2d = kDock * (Lv / p.C_L) * (1 - Dv / p.C_D), d2p = kPrime * (Dv / p.C_D) * (1 - Pv / p.C_P), rel = dep * Pv;
     Rv += f2r - r2l; Lv += r2l - l2d; Dv += l2d - d2p; Pv += d2p - rel; Fv += rel - f2r;
@@ -170,13 +203,35 @@ function stationary(f) {
   n.P = Pv;  // the continuous primed pool, for the vesicle-rate curve beta P f
   return n;
 }
-// the steady-state vesicle rate against the presynaptic rate, on the slider's range
-const CURVE = []; for (const f of [0, 0.1, 0.2, 0.35, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 10, 12, 15]) if (f <= +rateIn.max) CURVE.push([f, P0.beta * stationary(f).P * f]);
+// the steady-state vesicle rate against the presynaptic rate, on the slider's range: the cycle's (iterated) and the
+// single pool's C r beta f / (r + beta f); recomputed when a slider changes beta or the recovery rate
+const CURVE = [], CURVE_SP = [], CURVE_F = [0, 0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 8, 11, 15].filter(f => f <= +rateIn.max);
+let curveDirty = true, lastCurve = 0;
+function recomputeCurves() {
+  CURVE.length = 0; CURVE_SP.length = 0;
+  for (const f of CURVE_F) { CURVE.push([f, P0.beta * stationary(f).P * f]); const r = spRate(), b = P0.beta; CURVE_SP.push([f, P0.C_P * r * b * f / (r + b * f)]); }
+  curveDirty = false;
+}
+recomputeCurves();
+// ?compare: the two sliders, both models at once
+const betaIn = $("beta"), krecIn = $("krec");
+if (OPT.compare) {
+  betaIn.hidden = krecIn.hidden = false;
+  betaIn.value = P0.beta;
+  krecIn.min = Math.log10(OPT.krecLo); krecIn.max = Math.log10(OPT.krecHi); krecIn.value = Math.log10(kRec());
+  betaIn.addEventListener("input", () => { P0.beta = +betaIn.value; curveDirty = true; });
+  krecIn.addEventListener("input", () => { P0.tau_recover = 1000 / 10 ** +krecIn.value; curveDirty = true; });
+  for (const inp of [betaIn, krecIn]) inp.addEventListener("change", () => inp.blur());
+}
 function setStationary() {
   const n = stationary(rate());
   for (const pl of pools) { for (const q of pl.pos) q.v = null; pl.count = 0; }
   let i = 0;
   for (const pi of [R, L, D, P, F]) for (let k = 0; k < n[pi]; k++) { const v = ves[i++]; v.pos = null; v.fly = null; place(v, pi); }
+  if (OPT.compare) {  // the single pool: round(C r / (r + beta f)) slots filled
+    const r = spRate(), nFull = Math.round(sp.cap * r / (r + P0.beta * rate()));
+    sp.pos.forEach((q, k) => { q.full = k < nFull; q.fadeT0 = null; }); sp.count = nFull; sp.out.length = 0;
+  }
 }
 // controls, bottom right: simulation speed and a jump to the stationary state
 let speed = OPT.speed;
@@ -194,37 +249,58 @@ function draw() {
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
   // layout: the pools on a vertical line, radii from pools[].r; the spike lane into the primed pool; the arc on the right
-  const cx = 0.42 * w, gap = 0.9 * em, top = 0.6 * em, bottom = h - 3.2 * em;
-  const sumR = pools.reduce((a, p) => a + 2 * p.r, 0), unit = (bottom - top - 4 * gap) / sumR;
-  let y = top;
-  for (const pl of pools) { pl.R = pl.r * unit; pl.cx = cx; pl.cy = y + pl.R; y += 2 * pl.R + gap; }
+  if (curveDirty && performance.now() - lastCurve > 200) { recomputeCurves(); lastCurve = performance.now(); }  // while a slider drags: a few times per second
+  const CMP = OPT.compare, gap = 0.9 * em;
+  let cx, top;
+  if (!CMP) {  // the pools on a vertical line, radii from pools[].r
+    cx = 0.42 * w; top = 0.6 * em; const bottom = h - 3.2 * em;
+    const sumR = pools.reduce((a, p) => a + 2 * p.r, 0), unit = (bottom - top - 4 * gap) / sumR;
+    let y = top;
+    for (const pl of pools) { pl.R = pl.r * unit; pl.cx = cx; pl.cy = y + pl.R; y += 2 * pl.R + gap; }
+  } else {  // the pools on a circle, 72 degrees apart, the primed pool at the bottom; the single pool below it
+    top = 1.4 * em;  // the upper pools' labels
+    const unit = (h - top - 2.8 * em - 1.81 * gap) / 5.7, Rc = 1.6 * unit + gap;  // the circle's extent + the single pool fit the height
+    cx = 0.3 * w; const ccy = top + 0.81 * Rc + 0.8 * unit;
+    const ANG = { [P]: 90, [D]: 18, [L]: -54, [R]: -126, [F]: 162 };  // degrees, clockwise from the right (canvas y down)
+    pools.forEach((pl, k) => { const a = ANG[k] * Math.PI / 180; pl.R = pl.r * unit; pl.cx = cx + Rc * Math.cos(a); pl.cy = ccy + Rc * Math.sin(a); pl.ang = a; });
+    CIRC = { cx, cy: ccy, Rc };
+  }
   const VR = Math.max(3, pools[R].R * 0.6 / Math.sqrt(pools[R].cap) * 0.95), vr = () => VR;
   const world = (pi, q) => [pools[pi].cx + q.x * pools[pi].R, pools[pi].cy + q.y * pools[pi].R];
   // pools and labels
   for (const pl of pools) {
     ctx.strokeStyle = LINE; ctx.lineWidth = 0.1 * em; ctx.beginPath(); ctx.arc(pl.cx, pl.cy, pl.R, 0, 2 * Math.PI); ctx.stroke();
     ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = MUTED; ctx.font = `${0.85 * em}px ${FONT}`;
-    ctx.fillText(pl.name, cx + pools[F].R + 3.2 * em, pl.cy);  // one centred column beside the widest pool
+    if (!CMP) ctx.fillText(pl.name, cx + pools[F].R + 3.2 * em, pl.cy);  // one centred column beside the widest pool
+    else if (pl === pools[P] || Math.abs(Math.cos(pl.ang)) > 0.6) {  // beside the pool, away from the circle (the primed one: to the right)
+      const right = pl === pools[P] || Math.cos(pl.ang) > 0;
+      ctx.textAlign = right ? "left" : "right"; ctx.fillText(pl.name, pl.cx + (right ? 1 : -1) * (pl.R + 0.5 * em), pl.cy);
+    } else { ctx.textBaseline = "bottom"; ctx.fillText(pl.name, pl.cx, pl.cy - pl.R - 0.4 * em); }  // the upper pools: above
   }
   // slots
   for (const pl of pools) if (pl.slots) for (const q of pl.pos) {
     const [x, yy] = [pl.cx + q.x * pl.R, pl.cy + q.y * pl.R], sr = vr(pools.indexOf(pl));
     ctx.fillStyle = "#d8d8de"; ctx.beginPath(); ctx.arc(x, yy, sr, 0, 2 * Math.PI); ctx.fill();
   }
-  // the spike lane, from the left edge into the primed pool
+  // the spike lane, from the left edge into the primed pool; ?compare: a second, identical one into the single pool
   const pp = pools[P], laneY = pp.cy, laneL = 0, laneR = pp.cx - pp.R - 0.4 * em;
-  ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(laneL, laneY); ctx.lineTo(laneR, laneY); ctx.stroke();
-  ctx.fillStyle = MUTED; ctx.font = `${0.82 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-  ctx.fillText("presynaptic spikes", laneL + 0.5 * em, laneY - 0.75 * em);
-  ctx.strokeStyle = INK; ctx.lineWidth = 0.14 * em;
-  for (const s of spikes) {
-    const u = (s.tHit - simT) / OPT.lane; if (u > 1 || u < 0) continue;
-    const x = laneL + (1 - u) * (laneR - laneL);
-    ctx.beginPath(); ctx.moveTo(x, laneY - 0.55 * em); ctx.lineTo(x, laneY + 0.55 * em); ctx.stroke();
+  const spR = pools[D].R, spX = CMP ? pp.cx : 0, spY = CMP ? pp.cy + pp.R + 0.9 * em + spR : 0, lane2R = spX - spR - 0.4 * em;
+  const lanes = CMP ? [[laneY, laneR, "presynaptic spikes", true], [spY, lane2R, "the same spikes", false]] : [[laneY, laneR, "presynaptic spikes", false]];
+  for (const [ly, lr, name, below] of lanes) {  // ?compare: lane 1's label below it (the fused pool sits above)
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(laneL, ly); ctx.lineTo(lr, ly); ctx.stroke();
+    ctx.fillStyle = MUTED; ctx.font = `${0.82 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = below ? "top" : "bottom";
+    ctx.fillText(name, laneL + 0.5 * em, below ? ly + 0.75 * em : ly - 0.75 * em);
+    ctx.strokeStyle = INK; ctx.lineWidth = 0.14 * em;
+    for (const s of spikes) {
+      const u = (s.tHit - simT) / OPT.lane; if (u > 1 || u < 0) continue;
+      const x = laneL + (1 - u) * (lr - laneL);
+      ctx.beginPath(); ctx.moveTo(x, ly - 0.55 * em); ctx.lineTo(x, ly + 0.55 * em); ctx.stroke();
+    }
   }
   for (const s of spikes) { const age = simT - s.tHit; if (s.done && age < 150) { ctx.globalAlpha = 0.5 * (1 - age / 150); ctx.lineWidth = 0.14 * em; ctx.beginPath(); ctx.arc(pp.cx, pp.cy, pp.R, 0, 2 * Math.PI); ctx.stroke(); ctx.globalAlpha = 1; } }
   // the arc's control point: well to the right, at the middle height
-  const arcCtrl = [cx + 0.4 * w, (pools[F].cy + pools[P].cy) / 2];  // the arc's widest point is at half the control offset: just past the labels
+  const arcCtrl = CMP ? [CIRC.cx + 1.7 * CIRC.Rc * Math.cos(140 * Math.PI / 180), CIRC.cy + 1.7 * CIRC.Rc * Math.sin(140 * Math.PI / 180)]  // outside the circle, between the primed and the fused pool
+                      : [cx + 0.4 * w, (pools[F].cy + pools[P].cy) / 2];  // the arc's widest point is at half the control offset: just past the labels
   // vesicles: dashed empty when fused, solid empty when recovered, filled from loaded on; in flight, interpolated
   for (const v of ves) {
     let [x, yy] = world(v.pool, v.pos), rad = vr(v.pool);
@@ -241,10 +317,34 @@ function draw() {
     ctx.beginPath(); ctx.arc(x, yy, rad, 0, 2 * Math.PI);
     ctx.fillStyle = POOL_COLOR[v.pool]; ctx.fill();
   }
+  // ?compare: the single pool under the primed pool, its releases leaving to the right
+  if (CMP) {
+    ctx.strokeStyle = LINE; ctx.lineWidth = 0.1 * em; ctx.beginPath(); ctx.arc(spX, spY, spR, 0, 2 * Math.PI); ctx.stroke();
+    for (const s of spikes) { const age = simT - s.tHit; if (s.done2 && age >= 0 && age < 150) { ctx.globalAlpha = 0.5 * (1 - age / 150); ctx.strokeStyle = LINE; ctx.lineWidth = 0.14 * em; ctx.beginPath(); ctx.arc(spX, spY, spR, 0, 2 * Math.PI); ctx.stroke(); ctx.globalAlpha = 1; } }
+    const svr = vr(P) * 1.6;
+    for (const q of sp.pos) {
+      const x = spX + q.x * spR, yy = spY + q.y * spR;
+      ctx.fillStyle = "#d8d8de"; ctx.beginPath(); ctx.arc(x, yy, svr, 0, 2 * Math.PI); ctx.fill();
+      if (q.full) { ctx.globalAlpha = q.fadeT0 == null ? 1 : Math.min(1, (simT - q.fadeT0) / 500); ctx.fillStyle = POOL_COLOR[P]; ctx.beginPath(); ctx.arc(x, yy, svr, 0, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1; }
+    }
+    const outL = spX + spR + 0.4 * em, outR = Math.min(0.56 * w, outL + 9 * em);
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(outL, spY); ctx.lineTo(outR, spY); ctx.stroke();
+    for (const o of sp.out) {  // from the slot to the out lane, then along it, fading
+      const u = Math.min(1, (simT - o.t0) / SP_OUT), x0 = spX + o.q.x * spR, y0 = spY + o.q.y * spR;
+      const x = u < 0.25 ? x0 + (outL - x0) * ease(u / 0.25) : outL + (outR - outL) * (u - 0.25) / 0.75, yy = u < 0.25 ? y0 + (spY - y0) * ease(u / 0.25) : spY;
+      ctx.globalAlpha = u < 0.6 ? 1 : 1 - (u - 0.6) / 0.4; ctx.fillStyle = RELEASED; ctx.beginPath(); ctx.arc(x, yy, svr, 0, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = SP_COLOR; ctx.font = `600 ${0.85 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("single pool", outL, spY - 0.5 * em);
+    ctx.fillStyle = MUTED; ctx.font = `${0.8 * em}px ${FONT}`; ctx.textBaseline = "top";
+    ctx.fillText(`C = ${P0.C_P}, refill r = k / C per empty slot`, outL, spY + 0.5 * em);
+    ctx.fillStyle = RELEASED; ctx.font = `600 ${0.85 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("vesicle cycle", CIRC.cx, CIRC.cy);  // in the circle's centre
+  }
   // bottom right: the vesicle rate against the spike rate (both from the last lane time), over the steady-state curve
   {
-    const x0 = 0.66 * w + 2.4 * em, x1 = 0.95 * w, y0 = 0.58 * h, y1 = h - 3.2 * em, rMax = +rateIn.max;
-    let peak = 0; for (const q of traceV) if (q[1] > peak) peak = q[1]; for (const q of CURVE) if (q[1] > peak) peak = q[1];
+    const x0 = CMP ? 0.62 * w + 2.4 * em : 0.66 * w + 2.4 * em, x1 = CMP ? 0.97 * w : 0.95 * w, y0 = CMP ? 0.07 * h : 0.58 * h, y1 = CMP ? 0.5 * h : h - 3.2 * em, rMax = +rateIn.max;
+    let peak = 0; for (const q of traceV) { if (q[1] > peak) peak = q[1]; if (CMP && q[2] > peak) peak = q[2]; } for (const q of CURVE) if (q[1] > peak) peak = q[1]; if (CMP) for (const q of CURVE_SP) if (q[1] > peak) peak = q[1];
     const yMax = Math.max(peak * 1.15, 0.2);
     const X = v => x0 + Math.min(v / rMax, 1.02) * (x1 - x0), Y = v => y1 - Math.min(v / yMax, 1.02) * (y1 - y0);
     ctx.strokeStyle = INK; ctx.lineWidth = 0.1 * em; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
@@ -258,8 +358,26 @@ function draw() {
     ctx.fillText("spike rate (Hz)", (x0 + x1) / 2, y1 + 1.4 * em);
     ctx.save(); ctx.translate(x0 - 1.9 * em, (y0 + y1) / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("vesicle rate (/s)", 0, 0); ctx.restore();
-    ctx.strokeStyle = "#b8b8c0"; ctx.lineWidth = 0.14 * em; ctx.beginPath();
+    ctx.strokeStyle = CMP ? RELEASED : "#b8b8c0"; ctx.lineWidth = 0.14 * em; ctx.beginPath();
     CURVE.forEach((q, i) => { i ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])); }); ctx.stroke();
+    if (CMP) {  // the single pool's curve and live point, purple
+      ctx.strokeStyle = SP_COLOR; ctx.lineWidth = 0.14 * em; ctx.setLineDash([6, 5]); ctx.beginPath();
+      CURVE_SP.forEach((q, i) => { i ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])); }); ctx.stroke(); ctx.setLineDash([]);
+      ctx.lineWidth = 0.16 * em; ctx.lineCap = "round";
+      for (let i = 1; i < traceS.length; i++) {
+        ctx.globalAlpha = 0.5 * (1 - (simT - traceS[i][0]) / WIN);
+        ctx.beginPath(); ctx.moveTo(X(traceS[i - 1][1]), Y(traceV[i - 1][2])); ctx.lineTo(X(traceS[i][1]), Y(traceV[i][2])); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      if (traceS.length) { const i = traceS.length - 1; ctx.fillStyle = SP_COLOR; ctx.beginPath(); ctx.arc(X(traceS[i][1]), Y(traceV[i][2]), 0.4 * em, 0, 2 * Math.PI); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); }
+      // legend, top left of the plot
+      ctx.font = `${0.8 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      [[RELEASED, "vesicle cycle", []], [SP_COLOR, "single pool", [6, 5]]].forEach(([col, name, dash], k) => {
+        const yy = y0 + (0.6 + 1.1 * k) * em; ctx.strokeStyle = col; ctx.lineWidth = 0.14 * em; ctx.setLineDash(dash);
+        ctx.beginPath(); ctx.moveTo(x0 + 0.5 * em, yy); ctx.lineTo(x0 + 2 * em, yy); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = INK; ctx.fillText(name, x0 + 2.4 * em, yy);
+      });
+    }
     ctx.strokeStyle = RELEASED; ctx.lineWidth = 0.16 * em; ctx.lineCap = "round";
     for (let i = 1; i < traceS.length; i++) {
       ctx.globalAlpha = 0.5 * (1 - (simT - traceS[i][0]) / WIN);
@@ -271,6 +389,23 @@ function draw() {
       ctx.fillStyle = RELEASED; ctx.beginPath(); ctx.arc(X(traceS[i][1]), Y(traceV[i][1]), 0.4 * em, 0, 2 * Math.PI); ctx.fill();
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
     }
+  }
+  if (CMP) {  // the two sliders under the plot, both models at once
+    const sL = 0.69 * w, sW = 0.93 * w - sL;
+    const slider = (inp, yy, title, lo, hi, val) => {  // the name above, min | value | max below
+      Object.assign(inp.style, { left: sL + "px", top: yy - 0.22 * em + "px", width: sW + "px" });
+      ctx.fillStyle = INK; ctx.font = `600 ${0.85 * em}px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+      ctx.fillText(title, sL, yy - 0.75 * em);
+      ctx.fillStyle = MUTED; ctx.font = `${0.75 * em}px ${FONT}`; ctx.textBaseline = "top";
+      ctx.textAlign = "left"; ctx.fillText(lo, sL, yy + 0.6 * em); ctx.textAlign = "right"; ctx.fillText(hi, sL + sW, yy + 0.6 * em);
+      ctx.fillStyle = INK; ctx.font = `600 ${0.78 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.fillText(val, sL + sW / 2, yy + 0.6 * em);
+    };
+    slider(rateIn, 0.65 * h, "presynaptic rate (Hz)", "0", rateIn.max, rate().toFixed(1));
+    slider(betaIn, 0.78 * h, "release probability β", "0.05", "1", P0.beta.toFixed(2));
+    slider(krecIn, 0.91 * h, "recovery rate k (/s)", String(OPT.krecLo), String(OPT.krecHi), kRec().toFixed(2));
+    ctx.fillStyle = MUTED; ctx.font = `${0.72 * em}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(`τ_recover = 1 / k = ${(P0.tau_recover / 1000).toFixed(1)} s`, sL + sW / 2, 0.91 * h + 1.5 * em);
+    return;
   }
   // the presynaptic rate slider, bottom left
   const sL = 0.6 * em, sR = laneR;

@@ -138,7 +138,7 @@ button:hover { border-color: var(--accent); }
 .clean.beside #map2Box { flex: none; margin-top: .6em; }
 .clean.beside .left, .clean.beside #mapBox, .clean.beside #map { flex: none; }
 /* ?ctl: a small always-visible bar (speed ◀ ×n ▶, +30 s) at the right, under the panels' row (layout() places it) */
-#ctl { position: absolute; right: 0; display: flex; gap: .3em; align-items: center; z-index: 6; font-size: calc(.7em * var(--fs, 1)); }
+#ctl { position: absolute; right: 0; display: flex; gap: .3em; align-items: center; z-index: 6; font-size: calc(.9em * var(--fs, 1)); }
 #ctl button { font: inherit; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; cursor: pointer; }
 #ctl button:hover { border-color: var(--ink); color: var(--ink); }
 #ctl span { color: var(--muted); min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -182,9 +182,12 @@ button:hover { border-color: var(--accent); }
 .lab #gridBox { flex: none; display: flex; flex-direction: column; }
 .lab #gridBox h2, .lab #gridBox .note { display: none; }
 .lab #gridBox canvas { flex: none; }  /* its height is set by layout(), not by the column's flex basis */
-#labSliders { display: grid; grid-template-columns: auto 1fr auto; gap: .45em .6em; align-items: center; font-size: 1em; }
-#labSliders label { white-space: nowrap; }
-#labSliders .v { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 5em; text-align: right; }
+#labSliders { display: flex; flex-direction: column; gap: .5em; font-size: 1em; }
+/* one slider: its name above, the range across the column, min | value | max below */
+.labSlider { display: flex; flex-direction: column; gap: .15em; }
+.labSlider label { white-space: nowrap; }
+.labSlider .sub { display: flex; justify-content: space-between; color: var(--muted); font-size: .85em; font-variant-numeric: tabular-nums; }
+.labSlider .sub .v { color: var(--ink); font-weight: 600; }
 #labSliders input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: .4em; margin: 0; border-radius: .2em;
   background: linear-gradient(90deg, #e4e4ea, #9a9aa6); cursor: pointer; }
 #labSliders input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.1em; height: 1.1em; border-radius: 50%;
@@ -192,12 +195,12 @@ button:hover { border-color: var(--accent); }
 #labSliders input[type=range]::-moz-range-thumb { width: 1.1em; height: 1.1em; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
 #labSliders input.ext { background: linear-gradient(90deg, #fbd9b6, #F28E2B); }
 #labSet { display: flex; gap: .4em; align-items: center; flex-wrap: wrap; }
-.lab #ctl { position: static; font-size: .85em; }
-#labSet > button { font-size: .85em; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; }
+.lab #ctl { position: static; font-size: 1em; }
+#labSet > button { font-size: 1em; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .15em .5em; }
 #labSet > button:hover { border-color: var(--ink); color: var(--ink); }
 #labPanels { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .6em 1.2em; min-width: 0; min-height: 0; }
 .labPanel { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.labPanel select { align-self: flex-start; font-size: .8em; padding: .05em .4em; margin-bottom: .15em; color: var(--muted); }
+.labPanel select { align-self: flex-start; font-size: 1em; padding: .05em .4em; margin-bottom: .15em; color: var(--muted); }
 .labPanel canvas { flex: 1 1 0; min-height: 0; width: 100%; }
 
 /* floating play/reset/kick for ?clean, top right of the panels, visible while the pointer is over the widget */
@@ -256,6 +259,9 @@ const OPT = (() => {
     hud: clean && !Q.has("nohud") && !lab, titles: !Q.has("notitles") && !lab,
     // ?panels=…,task: input gain (mV), figure-eight period (s), readout delay (ms), readout memory (s)
     gain: num("gain", 0.75), period: num("period", 3), delay: num("delay", 0), mem: num("mem", 5),
+    // ?wallsync: the signal's phase follows the wall clock instead of this frame's simulation time, so every
+    // frame of a slide (the signal panel and the rows) shows the same phase however they load or lag
+    wallsync: flag("wallsync"),
     // ?stages: reveal the task slide in steps (0: drive, 1: + readout, 2: + R²), set by the deck's fragments
     // (widget-stages.html) or ?stage=k; ?stage=k alone fixes the stage (the deck's fragments don't move it)
     stages: flag("stages"), stage: num("stage", 0),
@@ -298,6 +304,9 @@ const OPT = (() => {
     // excitatory current and never deplete (Brunel 2000: C_I = C_E / 4, J_I = -g J_E). ?size=primed: in the
     // grid view a square's size follows the neuron's primed pool, scaled between the min and max of the last 3 s
     inh: num("inh", 0), g: num("g", 5), size: Q.get("size") === "primed",
+    // ?pool=dots: round(P_i) small green dots inside each square, the neuron's primed vesicles (one pool per
+    // neuron, shared by all its outgoing synapses), on a lattice of ceil(sqrt(C_P)) per side
+    pool: Q.get("pool") === "dots",
     det: Q.get("release") === "det",  // ?release=det: every spike delivers its mean release (no quantal noise)  // task slide: slider under the drive arrow scaling I_ext (1 = the URL's V)  // the + loop's q when on (default: the starting q, or 0.75)
   };
 })();
@@ -698,9 +707,11 @@ class Task {
   }
   // the signal at time t (ms): a figure eight, x and y in [-1, 1]
   sig(t) { const p = 2 * Math.PI * t / this.o.period; return [Math.sin(p), Math.sin(2 * p)]; }
+  // the signal's clock: the simulation's, or (?wallsync) the wall clock, wrapped at a multiple of the period
+  now() { return OPT.wallsync ? Date.now() % (this.o.period * 1000) : sim.time; }
   // drive for the next bin: called at a bin boundary, held for the bin
   drive(sim) {
-    const [x, y] = this.sig(sim.time), g = this.o.gain;
+    const [x, y] = this.sig(this.now()), g = this.o.gain;
     for (let i = 0; i < this.n; i++) sim.ext[i] = g * (this.cx[i] * x + this.cy[i] * y);
   }
   spike(i) { this.tr[i] += 1; }
@@ -709,7 +720,7 @@ class Task {
     const n = this.n, m = n + 1, f = this.f, dec = Math.exp(-BIN_MS / this.o.tauF);
     for (let i = 0; i < n; i++) { f[i] = this.tr[i]; this.tr[i] *= dec; }
     f[n] = 1;
-    const [tx, ty] = this.sig(t - this.o.delay);
+    const [tx, ty] = this.sig(this.now() - this.o.delay);
     let px = 0, py = 0;
     for (let k = 0; k < m; k++) { px += this.wx[k] * f[k]; py += this.wy[k] * f[k]; }
     this.px = px; this.py = py;
@@ -864,7 +875,7 @@ function advance(nSteps) {
         const a = 1 - Math.exp(-BIN_MS / 80);
         rec.sx += a * (task.px - rec.sx); rec.sy += a * (task.py - rec.sy);
         // the target dot gets the same smoothing, so the lag doesn't show up as error
-        const [tx, ty] = task.sig(sim.time - task.o.delay);
+        const [tx, ty] = task.sig(task.now() - task.o.delay);
         rec.tx += a * (tx - rec.tx); rec.ty += a * (ty - rec.ty);
         rec.binS[b] = Math.max(0, task.score); rec.binX[b] = rec.sx; rec.binY[b] = rec.sy;
         rec.binE[b] = (rec.sx - rec.tx) ** 2 + (rec.sy - rec.ty) ** 2; rec.binQ[b] = rec.tx ** 2 + rec.ty ** 2;
@@ -1040,7 +1051,7 @@ function drawMap() {
   }
   // axes
   const ink = cssVar("--ink"), muted = cssVar("--muted");
-  ctx.strokeStyle = muted; ctx.fillStyle = muted; ctx.font = font(11);
+  ctx.strokeStyle = muted; ctx.fillStyle = muted; ctx.font = font(13);
   ctx.textAlign = "center"; ctx.textBaseline = "top";
   const vStep = g.pw / 7 < 44 * FS ? 1 : 0.5;  // a narrow plane (?depmap): whole millivolts, or the labels collide
   for (let v = Math.ceil(vMin / vStep) * vStep; v <= vMax + 1e-9; v += vStep) {
@@ -1125,7 +1136,7 @@ function drawMap2() {
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = "#e8e8ee"; ctx.fillRect(M.l, M.t, g.pw, g.ph);
   const ink = cssVar("--ink"), muted = cssVar("--muted");
-  ctx.strokeStyle = muted; ctx.fillStyle = muted; ctx.font = font(11);
+  ctx.strokeStyle = muted; ctx.fillStyle = muted; ctx.font = font(13);
   ctx.textAlign = "center"; ctx.textBaseline = "top";
   for (const tau of [1, 3, 10, 30, 100]) {
     const x = tauToX(tau, g);
@@ -1550,8 +1561,10 @@ function drawGraph2D() {
 function drawGrid() {
   if (OPT.view === "graph") return drawGraph();
   const { ctx, w: cw, h: chh } = fitCanvas(gridCv, OPT.clean ? null : gridCv.clientWidth);
-  // as many columns as the canvas' aspect asks for (a square canvas gives a square grid)
-  const cols = Math.min(N, Math.ceil(Math.sqrt(N * cw / chh))), rows = Math.ceil(N / cols);
+  // as many columns as the canvas' aspect asks for; a square number of neurons in a roughly square canvas is
+  // always a square grid (layouts round the canvas a few per cent off square, and that must not add a column)
+  const sq = Math.round(Math.sqrt(N));
+  const cols = sq * sq === N && Math.abs(cw / chh - 1) < 0.2 ? sq : Math.min(N, Math.ceil(Math.sqrt(N * cw / chh))), rows = Math.ceil(N / cols);
   const cell = Math.min(cw / cols, chh / rows), pad = Math.max(1, cell * 0.08);
   const x0 = (cw - cols * cell) / 2, y0 = (chh - rows * cell) / 2;
   gridRect = { x: x0, y: y0, w: cols * cell, h: rows * cell }; gridCols = cols;
@@ -1579,6 +1592,12 @@ function drawGrid() {
       continue;
     }
     ctx.fillRect(x + pad, y + pad, cell - 2 * pad, cell - 2 * pad);
+    if (OPT.pool) {
+      const n = Math.max(0, Math.round(sim.P[i])), k = Math.max(2, Math.ceil(Math.sqrt(P0.C_P))), inner = cell - 2 * pad, step = inner / k, r = step * 0.3;
+      ctx.fillStyle = "#45A86C";
+      for (let d = 0; d < n && d < k * k; d++) { ctx.beginPath(); ctx.arc(x + pad + (d % k + 0.5) * step, y + pad + (Math.floor(d / k) + 0.5) * step, r, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.fillStyle = byTime ? lerpHex(...(sim.inh[i] ? INH_RAMP : SPIKE_RAMP), Math.exp(-(tNow - lastSpk[i]) / OPT.tau)) : seqColor(sim.P[i] / P0.C_P);
+    }
     const age = nowWall - flash[i];
     if (!byTime && age < 160) {
       ctx.globalAlpha = 1 - age / 160;
@@ -1596,7 +1615,7 @@ function plotFrame(cv, h) {
 }
 function timeAxis(f, t0, t1) {
   const { ctx, w, h, l, r, b } = f;
-  ctx.fillStyle = cssVar("--muted"); ctx.font = font(10);
+  ctx.fillStyle = cssVar("--muted"); ctx.font = font(12);
   ctx.textAlign = "center"; ctx.textBaseline = "top";
   const span = t1 - t0, step = span > 10000 ? 5000 : span > 4000 ? 1000 : 500;
   for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
@@ -1621,7 +1640,7 @@ function drawRaster(t0, t1, cv = rasterCv) {
     if (rec.spkI[idx] >= rows) continue;
     ctx.fillRect(l + (ts - t0) / span * pw, t + rec.spkI[idx] * rowH, mw, Math.max(1, rowH));
   }
-  ctx.fillStyle = cssVar("--muted"); ctx.font = font(10);
+  ctx.fillStyle = cssVar("--muted"); ctx.font = font(12);
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   ctx.fillText("0", l - 4, t + 2); ctx.fillText(String(rows - 1), l - 4, t + ph - 2);
   timeAxis(f, t0, t1);
@@ -1643,7 +1662,7 @@ function traces(cv, h, t0, t1, series, yMax, yLabel) {
     }
     ctx.stroke(); ctx.lineWidth = 1;
   }
-  ctx.fillStyle = cssVar("--muted"); ctx.font = font(10);
+  ctx.fillStyle = cssVar("--muted"); ctx.font = font(12);
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   ctx.fillText(yLabel(yMax), l - 4, t + 4 * FS); ctx.fillText("0", l - 4, t + ph);
   timeAxis(f, t0, t1);
@@ -1831,9 +1850,9 @@ function drawTrace(T) {
   ctx.beginPath(); ctx.moveTo(l - 0.5, t); ctx.lineTo(l - 0.5, t + ph);
   for (const v of T.ticks) { ctx.moveTo(l, Y(v)); ctx.lineTo(l - 4 * FS, Y(v)); }
   ctx.stroke();
-  ctx.font = font(10); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.font = font(12); ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (const v of T.ticks) ctx.fillText(String(v).replace("-", "−"), l - 6 * FS, Y(v));
-  ctx.font = font(11); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = ink;
+  ctx.font = font(13); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = ink;
   ctx.fillText(T.title, l - 6 * FS - ctx.measureText("−54").width * 10 / 11, t - 7 * FS);
   // reference lines (labelled after the trace, so it can't hide them)
   const refs = [[T.thr, "threshold", muted, false], [ext, T.lab, LEAK, true]];
@@ -1866,7 +1885,7 @@ function drawTrace(T) {
     for (const ts of vm.spk) if (ts >= t0) { ctx.moveTo(X(ts), Y(T.thr) - 3 * FS); ctx.lineTo(X(ts), t + 1 * FS); }
     ctx.stroke(); ctx.lineCap = "butt";
   }
-  ctx.font = font(11); ctx.textBaseline = "bottom"; ctx.lineJoin = "round";
+  ctx.font = font(13); ctx.textBaseline = "bottom"; ctx.lineJoin = "round";
   ctx.strokeStyle = cssVar("--panel") === "transparent" ? "#ffffff" : cssVar("--panel"); ctx.lineWidth = 4 * FS;
   const halo = (txt, x, y) => { ctx.strokeText(txt, x, y); ctx.fillText(txt, x, y); };
   // threshold at the left; the input line at the right, before the noise strip, so it can't sit on threshold's
@@ -2164,18 +2183,21 @@ if (OPT.lab) {
   $("labSet").append(rb);
   // the sliders: [class, label, min, max, step, read, write, format]; tau on a log scale
   const defs = [
-    ["ext", "external input", -53, -48, 0.01, () => sel.V, v => { sel.V = v; applySelection(false); }, v => v.toFixed(2) + " mV"],
-    ["q", "synaptic strength", 0, 2, 0.01, () => sel.q, v => { sel.q = v; applySelection(false); }, v => v.toFixed(2) + " mV"],
-    ["tau", "recovery timescale", 0, 2, 0.01, () => Math.log10(P0.tau_R / 1000), v => { P0.tau_R = 1000 * 10 ** v; }, v => (10 ** v).toFixed(1) + " s"],
-    ["cap", "capacity", 1, 20, 0.1, () => P0.C_P, v => { P0.C_P = v; }, v => v.toFixed(1) + " ves."],
+    ["ext", "external input", -53, -48, 0.01, () => sel.V, v => { sel.V = v; applySelection(false); }, v => (Number.isInteger(v) ? v : v.toFixed(2)) + " mV"],
+    ["q", "quantal EPSP", 0, 2, 0.01, () => sel.q, v => { sel.q = v; applySelection(false); }, v => (Number.isInteger(v) ? v : v.toFixed(2)) + " mV"],
+    ["tau", "recovery timescale", 0, 2, 0.01, () => Math.log10(P0.tau_R / 1000), v => { P0.tau_R = 1000 * 10 ** v; }, v => (Number.isInteger(v) ? 10 ** v : (10 ** v).toFixed(1)) + " s"],
+    ["cap", "capacity", 1, 20, 0.1, () => P0.C_P, v => { P0.C_P = v; }, v => (Number.isInteger(v) ? v : v.toFixed(1)) + " vesicles"],
   ];
   for (const [cls, name, lo, hi, step, get, set, fmt] of defs) {
-    const lab = document.createElement("label"), inp = document.createElement("input"), val = document.createElement("span");
-    lab.textContent = name; inp.type = "range"; inp.className = cls; inp.min = lo; inp.max = hi; inp.step = step; inp.value = get();
-    val.className = "v"; val.textContent = fmt(+inp.value);
+    const box = document.createElement("div"), lab = document.createElement("label"), inp = document.createElement("input"), sub = document.createElement("div");
+    box.className = "labSlider"; lab.textContent = name;
+    inp.type = "range"; inp.className = cls; inp.min = lo; inp.max = hi; inp.step = step; inp.value = get();
+    sub.className = "sub";
+    const [mn, val, mx] = ["", "v", ""].map(c => { const e = document.createElement("span"); e.className = c; sub.append(e); return e; });
+    mn.textContent = fmt(lo); mx.textContent = fmt(hi); val.textContent = fmt(+inp.value);
     inp.addEventListener("input", () => { set(+inp.value); val.textContent = fmt(+inp.value); poke(); });
     inp.addEventListener("change", () => inp.blur());
-    $("labSliders").append(lab, inp, val);
+    box.append(lab, inp, sub); $("labSliders").append(box);
   }
   for (let k = 0; k < 4; k++) {
     const box = document.createElement("div"), sel = document.createElement("select"), cv = document.createElement("canvas");
@@ -2244,7 +2266,7 @@ function labISI(t0, t1) {  // the interspike intervals in the window, pooled: a 
 function labAxes(f, xl, yl) {  // a boxed plot area with a label on each axis
   const { ctx, w, h, l, r, t, b } = f;
   ctx.strokeStyle = cssVar("--line"); ctx.lineWidth = 1; ctx.strokeRect(l + 0.5, t + 0.5, w - l - r - 1, h - t - b - 1);
-  ctx.fillStyle = cssVar("--muted"); ctx.font = font(10); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  ctx.fillStyle = cssVar("--muted"); ctx.font = font(12); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
   if (xl) ctx.fillText(xl, l + (w - l - r) / 2, h - 1);
   if (yl) { ctx.save(); ctx.translate(9 * FS, t + (h - t - b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(yl, 0, 0); ctx.restore(); }
 }
@@ -2264,7 +2286,7 @@ function drawLab(t0, t1) {
       labAxes(f, "frequency (Hz)", "power");
       const d = labCache.psd;
       const fLo = 0.3, fHi = 50, X = fr => l + Math.log10(fr / fLo) / Math.log10(fHi / fLo) * pw;
-      ctx.fillStyle = muted; ctx.font = font(10); ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = muted; ctx.font = font(12); ctx.textAlign = "center"; ctx.textBaseline = "top";
       for (const fr of [1, 10]) ctx.fillText(String(fr), X(fr), t + ph + 3);
       for (const fr of [0.5, 2, 5, 20, 50]) { ctx.strokeStyle = cssVar("--line"); ctx.beginPath(); ctx.moveTo(X(fr), t + ph); ctx.lineTo(X(fr), t + ph - 4); ctx.stroke(); }
       if (!d) { ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("collecting 2.6 s…", l + pw / 2, t + ph / 2); continue; }
@@ -2291,7 +2313,7 @@ function drawLab(t0, t1) {
       let yPeak = 0; for (const p of pts) yPeak = Math.max(yPeak, p[1]);
       labPhaseY += (Math.min(1, Math.max(0.05, yPeak * 1.15)) - labPhaseY) * 0.05;
       const X = v => l + Math.min(v / rateYMax, 1) * pw, Y = v => t + ph - Math.min(v / labPhaseY, 1) * ph;
-      ctx.fillStyle = muted; ctx.font = font(10); ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = muted; ctx.font = font(12); ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText("0", l, t + ph + 3); ctx.fillText(rateYMax.toFixed(0), l + pw, t + ph + 3);
       ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText("0", l - 3, t + ph); ctx.fillText(labPhaseY.toFixed(2), l - 3, t + 4 * FS);
       ctx.lineWidth = 1.3 * Math.max(1, FS * 0.8); ctx.strokeStyle = accent; ctx.lineCap = "round";
@@ -2303,12 +2325,12 @@ function drawLab(t0, t1) {
       const f = plotFrame(cv, 160); f.l = 36 * FS; f.b = 26 * FS; f.t = 6 * FS; f.r = 8;
       const { ctx, w, h, l, r, t, b } = f, pw = w - l - r, ph = h - t - b, d = labCache.isi, NB = d.counts.length;
       labAxes(f, "interspike interval", "count");
-      ctx.fillStyle = muted; ctx.font = font(10); ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = muted; ctx.font = font(12); ctx.textAlign = "center"; ctx.textBaseline = "top";
       [[0, "1 ms"], [1, "10 ms"], [2, "100 ms"], [3, "1 s"], [4, "10 s"]].forEach(([e, lab]) => ctx.fillText(lab, l + e / 4 * pw, t + ph + 3));
       let peak = 0; for (let k = 0; k < NB; k++) peak = Math.max(peak, d.counts[k]);
       ctx.fillStyle = accent;
       for (let k = 0; k < NB; k++) if (d.counts[k]) { const hh = d.counts[k] / peak * (ph - 4); ctx.fillRect(l + k / NB * pw + 1, t + ph - hh, pw / NB - 2, hh); }
-      ctx.fillStyle = ink; ctx.font = font(11); ctx.textAlign = "right"; ctx.textBaseline = "top";
+      ctx.fillStyle = ink; ctx.font = font(13); ctx.textAlign = "right"; ctx.textBaseline = "top";
       ctx.fillText(d.cv == null ? "CV –" : "CV " + d.cv.toFixed(2), l + pw - 4, t + 4);
     }
   }
